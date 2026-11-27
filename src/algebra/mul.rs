@@ -15,6 +15,8 @@ use crate::types::{LessComp, LmixComp, MatComp, RetComp};
 
 use crate::types::MATSUBARA;
 
+use crate::algebra::ops::check_tstp;
+
 // ------------------------------------------------------------------
 // green-level ops
 // ------------------------------------------------------------------
@@ -133,49 +135,14 @@ impl ContourGreen {
             self.size1 == self.size2,
             "Cf multiplication requires square blocks"
         );
-        let (s1, s2) = (self.size1, self.size2);
-        if tstp == MATSUBARA {
-            let m = cf_block(cf, MATSUBARA, adjoint);
-            self.mat.lmul(&m, Adjoint::No);
-            return;
-        }
-        self.check_tstp(tstp);
-        let b = s1 * s2;
-        let mut scratch = vec![Complex::ZERO; b];
-        let m = cf_block(cf, tstp, adjoint);
-        for k in 0..=(tstp as usize) {
-            left_mul_block(
-                &mut self.ret.row_mut(tstp)[k * b..(k + 1) * b],
-                &m,
-                s1,
-                s2,
-                Adjoint::No,
-                &mut scratch,
-            );
-        }
-        let ntau = self.ntau;
-        let row = self.lmix.row_mut(tstp);
-        for k in 0..=ntau {
-            left_mul_block(
-                &mut row[k * b..(k + 1) * b],
-                &m,
-                s1,
-                s2,
-                Adjoint::No,
-                &mut scratch,
-            );
-        }
-        for j in 0..=tstp {
-            let mj = cf_block(cf, j, adjoint);
-            left_mul_block(
-                &mut self.less.row_mut(tstp)[(j as usize) * b..(j as usize + 1) * b],
-                &mj,
-                s1,
-                s2,
-                Adjoint::No,
-                &mut scratch,
-            );
-        }
+        lmul_cf_at(
+            (&mut self.mat, &mut self.ret, &mut self.lmix, &mut self.less),
+            (self.size1, self.size2),
+            (self.nt, self.ntau),
+            tstp,
+            cf,
+            adjoint,
+        );
     }
 
     /// Right-multiply the blocks at `tstp` by `cf(†)` evaluated at each
@@ -187,50 +154,14 @@ impl ContourGreen {
             self.size1 == self.size2,
             "Cf multiplication requires square blocks"
         );
-        let (s1, s2) = (self.size1, self.size2);
-        if tstp == MATSUBARA {
-            let m = cf_block(cf, MATSUBARA, adjoint);
-            self.mat.rmul(&m, Adjoint::No);
-            return;
-        }
-        self.check_tstp(tstp);
-        let b = s1 * s2;
-        let mut scratch = vec![Complex::ZERO; b];
-        for j in 0..=tstp {
-            let mj = cf_block(cf, j, adjoint);
-            right_mul_block(
-                &mut self.ret.row_mut(tstp)[(j as usize) * b..(j as usize + 1) * b],
-                &mj,
-                s1,
-                s2,
-                Adjoint::No,
-                &mut scratch,
-            );
-        }
-        let mm = cf_block(cf, MATSUBARA, adjoint);
-        let ntau = self.ntau;
-        let row = self.lmix.row_mut(tstp);
-        for k in 0..=ntau {
-            right_mul_block(
-                &mut row[k * b..(k + 1) * b],
-                &mm,
-                s1,
-                s2,
-                Adjoint::No,
-                &mut scratch,
-            );
-        }
-        let mt = cf_block(cf, tstp, adjoint);
-        for k in 0..=(tstp as usize) {
-            right_mul_block(
-                &mut self.less.row_mut(tstp)[k * b..(k + 1) * b],
-                &mt,
-                s1,
-                s2,
-                Adjoint::No,
-                &mut scratch,
-            );
-        }
+        rmul_cf_at(
+            (&mut self.mat, &mut self.ret, &mut self.lmix, &mut self.less),
+            (self.size1, self.size2),
+            (self.nt, self.ntau),
+            tstp,
+            cf,
+            adjoint,
+        );
     }
 }
 
@@ -449,10 +380,130 @@ impl LessComp {
 }
 
 // ------------------------------------------------------------------
+// step bodies shared by the contour and the pseudo-particle objects:
+// both pass their four components (mat, ret, lmix, less) as a tuple
+// ------------------------------------------------------------------
+
+/// The body of `ContourGreen::lmul_cf_at` on the four components `(mat,
+/// ret, lmix, less)`: shared with the pseudo-particle object.
+pub(crate) fn lmul_cf_at(
+    dst: (&mut MatComp, &mut RetComp, &mut LmixComp, &mut LessComp),
+    (s1, s2): (usize, usize),
+    (nt, ntau): (usize, usize),
+    tstp: i64,
+    cf: &TimeFunction,
+    adjoint: Adjoint,
+) {
+    if tstp == MATSUBARA {
+        let m = cf_block(cf, MATSUBARA, adjoint);
+        dst.0.lmul(&m, Adjoint::No);
+        return;
+    }
+    check_tstp(nt, tstp);
+    let b = s1 * s2;
+    let mut scratch = vec![Complex::ZERO; b];
+    let m = cf_block(cf, tstp, adjoint);
+    for k in 0..=(tstp as usize) {
+        left_mul_block(
+            &mut dst.1.row_mut(tstp)[k * b..(k + 1) * b],
+            &m,
+            s1,
+            s2,
+            Adjoint::No,
+            &mut scratch,
+        );
+    }
+    let row = dst.2.row_mut(tstp);
+    for k in 0..=ntau {
+        left_mul_block(
+            &mut row[k * b..(k + 1) * b],
+            &m,
+            s1,
+            s2,
+            Adjoint::No,
+            &mut scratch,
+        );
+    }
+    for j in 0..=tstp {
+        let mj = cf_block(cf, j, adjoint);
+        left_mul_block(
+            &mut dst.3.row_mut(tstp)[(j as usize) * b..(j as usize + 1) * b],
+            &mj,
+            s1,
+            s2,
+            Adjoint::No,
+            &mut scratch,
+        );
+    }
+}
+
+/// The body of `ContourGreen::rmul_cf_at` on the four components `(mat,
+/// ret, lmix, less)`: shared with the pseudo-particle object.
+pub(crate) fn rmul_cf_at(
+    dst: (&mut MatComp, &mut RetComp, &mut LmixComp, &mut LessComp),
+    (s1, s2): (usize, usize),
+    (nt, ntau): (usize, usize),
+    tstp: i64,
+    cf: &TimeFunction,
+    adjoint: Adjoint,
+) {
+    if tstp == MATSUBARA {
+        let m = cf_block(cf, MATSUBARA, adjoint);
+        dst.0.rmul(&m, Adjoint::No);
+        return;
+    }
+    check_tstp(nt, tstp);
+    let b = s1 * s2;
+    let mut scratch = vec![Complex::ZERO; b];
+    for j in 0..=tstp {
+        let mj = cf_block(cf, j, adjoint);
+        right_mul_block(
+            &mut dst.1.row_mut(tstp)[(j as usize) * b..(j as usize + 1) * b],
+            &mj,
+            s1,
+            s2,
+            Adjoint::No,
+            &mut scratch,
+        );
+    }
+    let mm = cf_block(cf, MATSUBARA, adjoint);
+    let row = dst.2.row_mut(tstp);
+    for k in 0..=ntau {
+        right_mul_block(
+            &mut row[k * b..(k + 1) * b],
+            &mm,
+            s1,
+            s2,
+            Adjoint::No,
+            &mut scratch,
+        );
+    }
+    let mt = cf_block(cf, tstp, adjoint);
+    for k in 0..=(tstp as usize) {
+        right_mul_block(
+            &mut dst.3.row_mut(tstp)[k * b..(k + 1) * b],
+            &mt,
+            s1,
+            s2,
+            Adjoint::No,
+            &mut scratch,
+        );
+    }
+}
+
+// ------------------------------------------------------------------
 // block-level kernels (each loop written once)
 // ------------------------------------------------------------------
 
-#[inline]
+fn cf_block(cf: &TimeFunction, tstp: i64, adjoint: Adjoint) -> DenseMat {
+    let b = cf.block(tstp);
+    let mut m = DenseMat::from_slice(cf.size1, cf.size2, b);
+    if adjoint == Adjoint::Yes {
+        m = m.adjoint();
+    }
+    m
+}
+
 fn left_mul_block(
     dst: &mut [Complex],
     m: &DenseMat,
@@ -484,7 +535,6 @@ fn left_mul_block(
     dst.copy_from_slice(scratch);
 }
 
-#[inline]
 fn right_mul_block(
     dst: &mut [Complex],
     m: &DenseMat,
@@ -514,15 +564,6 @@ fn right_mul_block(
         }
     }
     dst.copy_from_slice(scratch);
-}
-
-fn cf_block(cf: &TimeFunction, tstp: i64, adjoint: Adjoint) -> DenseMat {
-    let b = cf.block(tstp);
-    let mut m = DenseMat::from_slice(cf.size1, cf.size2, b);
-    if adjoint == Adjoint::Yes {
-        m = m.adjoint();
-    }
-    m
 }
 
 /// Left-multiply every `b`-sized block of `raw` by `M(†)`.
@@ -593,15 +634,15 @@ mod tests {
         ContourGreen::new(&c, Sign::Fermi, Complex::ZERO)
     }
 
-    fn adjoint2(b: &[Complex]) -> DenseMat {
+    fn adjoint_of_block(b: &[Complex]) -> DenseMat {
         DenseMat::from_vec(2, 2, b.to_vec()).adjoint()
     }
 
-    fn dm(m: &DenseMat, q: usize) -> Complex {
+    fn elem(m: &DenseMat, q: usize) -> Complex {
         m.get(q / 2, q % 2)
     }
 
-    fn blkd(a: &[Complex], b: &[Complex]) -> f64 {
+    fn block_sqdist(a: &[Complex], b: &[Complex]) -> f64 {
         a.iter()
             .zip(b)
             .fold(0.0, |e, (x, y)| e + (*x - *y).abs() * (*x - *y).abs())
@@ -618,23 +659,23 @@ mod tests {
         // ret: w * f[tstp]' * ret
         let want = DenseMat::from_vec(2, 2, g.ret_raw_block(tstp, j).to_vec());
         let got = DenseMat::from_vec(2, 2, a.ret_raw_block(tstp, j).to_vec());
-        let wantm = adjoint2(f.block(tstp)).mat_mul(&want);
+        let wantm = adjoint_of_block(f.block(tstp)).mat_mul(&want);
         for q in 0..4 {
-            let d = (dm(&got, q) - dm(&wantm, q).scale(w)).abs();
+            let d = (elem(&got, q) - elem(&wantm, q).scale(w)).abs();
             assert!(d < 1e-13, "ret l ({tstp},{j})");
         }
         // less: w * f[j]' * less
         let want = DenseMat::from_vec(2, 2, g.less_raw_block(j, tstp).to_vec());
         let got = DenseMat::from_vec(2, 2, a.less_raw_block(j, tstp).to_vec());
-        let wantm = adjoint2(f.block(j)).mat_mul(&want);
+        let wantm = adjoint_of_block(f.block(j)).mat_mul(&want);
         for q in 0..4 {
-            let d = (dm(&got, q) - dm(&wantm, q).scale(w)).abs();
+            let d = (elem(&got, q) - elem(&wantm, q).scale(w)).abs();
             assert!(d < 1e-13, "less l ({j},{tstp})");
         }
     }
 
     #[test]
-    fn left_right_matrix_multiply() {
+    fn mat_block_lmul_rmul_adjoint() {
         // B = [[2,0],[0,3]], M = [[1,1],[0,1]]
         let mut a = mk(1);
         let set_b = |a: &mut ContourGreen| {
@@ -663,7 +704,7 @@ mod tests {
     }
 
     #[test]
-    fn row_scoped_matrix_multiply() {
+    fn lmul_at_touches_only_the_row() {
         let mut a = mk(2);
         a.set_ret(2, 0, 0, 0, Complex::new(2.0, 0.0));
         a.set_mat(0, 0, 0, Complex::new(9.0, 0.0));
@@ -677,7 +718,7 @@ mod tests {
     }
 
     #[test]
-    fn time_function_weight_multiply() {
+    fn lmul_cf_at_matsubara_branch() {
         let mut a = mk(1);
         a.set_mat(0, 0, 0, Complex::new(2.0, 0.0));
         let mut cf = TimeFunction::new(1, 2, 2, Complex::ZERO);
@@ -688,7 +729,7 @@ mod tests {
     }
 
     #[test]
-    fn smul_with_val_adjoint() {
+    fn cf_multiply_matches_manual_and_timestep_slice() {
         // grid: 7 x 6 points
         let c = Contour::new(6, 5, 2, 2, 0.6, 1.0);
         let mut g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
@@ -717,18 +758,11 @@ mod tests {
                     for m in 0..=5 {
                         let want = DenseMat::from_vec(2, 2, g.mat_raw_block(m).to_vec());
                         let got = DenseMat::from_vec(2, 2, a.mat_raw_block(m).to_vec());
-                        let wl = f
-                            .block(MATSUBARA)
-                            .iter()
-                            .zip(f.block(MATSUBARA))
-                            .map(|_| Complex::ZERO)
-                            .collect::<Vec<_>>();
-                        let _ = wl;
                         // w * f[0]' * G.mat
-                        let fadj = adjoint2(f.block(MATSUBARA));
+                        let fadj = adjoint_of_block(f.block(MATSUBARA));
                         let wantm = fadj.mat_mul(&want);
                         for q in 0..4 {
-                            let d = (dm(&got, q) - dm(&wantm, q).scale(w)).abs();
+                            let d = (elem(&got, q) - elem(&wantm, q).scale(w)).abs();
                             assert!(d < 1e-13, "mat {m} {d}");
                         }
                     }
@@ -740,10 +774,10 @@ mod tests {
                     for m in 0..=5 {
                         let want = DenseMat::from_vec(2, 2, g.lmix_raw_block(tstp, m).to_vec());
                         let got = DenseMat::from_vec(2, 2, a.lmix_raw_block(tstp, m).to_vec());
-                        let fadj = adjoint2(f.block(tstp));
+                        let fadj = adjoint_of_block(f.block(tstp));
                         let wantm = fadj.mat_mul(&want);
                         for q in 0..4 {
-                            let d = (dm(&got, q) - dm(&wantm, q).scale(w)).abs();
+                            let d = (elem(&got, q) - elem(&wantm, q).scale(w)).abs();
                             assert!(d < 1e-13);
                         }
                     }
@@ -756,15 +790,22 @@ mod tests {
                 let mut e = 0.0f64;
                 if tstp == MATSUBARA {
                     for q in 0..=5 {
-                        e += blkd(row.mat_raw_block(q), gslice.mat_raw_block(q));
+                        e += block_sqdist(row.mat_raw_block(q), gslice.mat_raw_block(q));
                     }
                 } else {
                     for j in 0..=tstp {
-                        e += blkd(row.ret_raw_block(tstp, j), gslice.ret_raw_block(tstp, j));
-                        e += blkd(row.less_raw_block(j, tstp), gslice.less_raw_block(j, tstp));
+                        e +=
+                            block_sqdist(row.ret_raw_block(tstp, j), gslice.ret_raw_block(tstp, j));
+                        e += block_sqdist(
+                            row.less_raw_block(j, tstp),
+                            gslice.less_raw_block(j, tstp),
+                        );
                     }
                     for m in 0..=5 {
-                        e += blkd(row.lmix_raw_block(tstp, m), gslice.lmix_raw_block(tstp, m));
+                        e += block_sqdist(
+                            row.lmix_raw_block(tstp, m),
+                            gslice.lmix_raw_block(tstp, m),
+                        );
                     }
                 }
                 assert!(e <= 1e-28, "slice mismatch at tstp {tstp}: {e}");
@@ -786,10 +827,10 @@ mod tests {
                     for m in 0..=5 {
                         let want = DenseMat::from_vec(2, 2, g.mat_raw_block(m).to_vec());
                         let got = DenseMat::from_vec(2, 2, a.mat_raw_block(m).to_vec());
-                        let fadj = adjoint2(f.block(MATSUBARA));
+                        let fadj = adjoint_of_block(f.block(MATSUBARA));
                         let wantm = want.mat_mul(&fadj);
                         for q in 0..4 {
-                            let d = (dm(&got, q) - dm(&wantm, q).scale(w)).abs();
+                            let d = (elem(&got, q) - elem(&wantm, q).scale(w)).abs();
                             assert!(d < 1e-13);
                         }
                     }
@@ -799,29 +840,29 @@ mod tests {
                         // ret * f[j]'
                         let want = DenseMat::from_vec(2, 2, g.ret_raw_block(tstp, j).to_vec());
                         let got = DenseMat::from_vec(2, 2, a.ret_raw_block(tstp, j).to_vec());
-                        let fadj = adjoint2(f.block(j));
+                        let fadj = adjoint_of_block(f.block(j));
                         let wantm = want.mat_mul(&fadj);
                         for q in 0..4 {
-                            let d = (dm(&got, q) - dm(&wantm, q).scale(w)).abs();
+                            let d = (elem(&got, q) - elem(&wantm, q).scale(w)).abs();
                             assert!(d < 1e-13, "ret r ({tstp},{j})");
                         }
                         // less * f[tstp]'
                         let want = DenseMat::from_vec(2, 2, g.less_raw_block(j, tstp).to_vec());
                         let got = DenseMat::from_vec(2, 2, a.less_raw_block(j, tstp).to_vec());
-                        let fadj = adjoint2(f.block(tstp));
+                        let fadj = adjoint_of_block(f.block(tstp));
                         let wantm = want.mat_mul(&fadj);
                         for q in 0..4 {
-                            let d = (dm(&got, q) - dm(&wantm, q).scale(w)).abs();
+                            let d = (elem(&got, q) - elem(&wantm, q).scale(w)).abs();
                             assert!(d < 1e-13, "less r ({j},{tstp})");
                         }
                     }
                     for m in 0..=5 {
                         let want = DenseMat::from_vec(2, 2, g.lmix_raw_block(tstp, m).to_vec());
                         let got = DenseMat::from_vec(2, 2, a.lmix_raw_block(tstp, m).to_vec());
-                        let fadj = adjoint2(f.block(MATSUBARA));
+                        let fadj = adjoint_of_block(f.block(MATSUBARA));
                         let wantm = want.mat_mul(&fadj);
                         for q in 0..4 {
-                            let d = (dm(&got, q) - dm(&wantm, q).scale(w)).abs();
+                            let d = (elem(&got, q) - elem(&wantm, q).scale(w)).abs();
                             assert!(d < 1e-13);
                         }
                     }

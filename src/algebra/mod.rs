@@ -14,3 +14,6 @@ pub use core::Algebra;
 
 pub use core::{add, smul_c, sub};
 pub use properties::frobenius_distance;
+
+pub(crate) use mul::{lmul_cf_at, rmul_cf_at};
+pub(crate) use ops::{memcpy_at, memset_at, smul_at};

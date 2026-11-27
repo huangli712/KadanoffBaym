@@ -502,7 +502,7 @@ mod tests {
         for tstp in -1..=nt {
             let t_row = if tstp == MATSUBARA { 0 } else { tstp };
             let s2 = timestep_at(&g2, t_row);
-            g4.incr_by_step(&s2, tstp, wz);
+            g4.incr_by_step(tstp, &s2, wz);
             err += g3.distance_at(&g4, tstp);
         }
         assert!(err < 1e-6, "incr slice err {err}");

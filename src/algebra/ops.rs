@@ -79,52 +79,12 @@ impl ContourGreen {
             self.is_compatible(src),
             "memcpy_from_at: incompatible greens"
         );
-        if tstp == MATSUBARA {
-            self.mat.memcpy_from(&src.mat);
-            return;
-        }
-        self.check_tstp(tstp);
-        self.ret.row_mut(tstp).copy_from_slice(src.ret.row(tstp));
-        self.lmix.row_mut(tstp).copy_from_slice(src.lmix.row(tstp));
-        self.less.row_mut(tstp).copy_from_slice(src.less.row(tstp));
-    }
-
-    /// Fill the components at `tstp` with `v`.
-    #[cfg(test)]
-    pub(crate) fn memset_at(&mut self, tstp: i64, v: Complex) {
-        if tstp == MATSUBARA {
-            self.mat.memset(v);
-            return;
-        }
-        self.check_tstp(tstp);
-        self.ret.row_mut(tstp).fill(v);
-        self.lmix.row_mut(tstp).fill(v);
-        self.less.row_mut(tstp).fill(v);
-    }
-
-    /// Zero the components at `tstp`.
-    #[cfg(test)]
-    pub(crate) fn set_zero_at(&mut self, tstp: i64) {
-        self.memset_at(tstp, Complex::ZERO);
-    }
-
-    /// `self[components at tstp] += src[...]` (test helper).
-    #[cfg(test)]
-    fn incr_by_at(&mut self, tstp: i64, src: &ContourGreen) {
-        if tstp == MATSUBARA {
-            self.mat.incr_by(&src.mat);
-            return;
-        }
-        self.check_tstp(tstp);
-        for (d, s) in self.ret.row_mut(tstp).iter_mut().zip(src.ret.row(tstp)) {
-            *d += *s;
-        }
-        for (d, s) in self.lmix.row_mut(tstp).iter_mut().zip(src.lmix.row(tstp)) {
-            *d += *s;
-        }
-        for (d, s) in self.less.row_mut(tstp).iter_mut().zip(src.less.row(tstp)) {
-            *d += *s;
-        }
+        memcpy_at(
+            (&mut self.mat, &mut self.ret, &mut self.lmix, &mut self.less),
+            (&src.mat, &src.ret, &src.lmix, &src.less),
+            tstp,
+            self.nt,
+        );
     }
 
     /// `self[components at tstp] += alpha * src[...]`.
@@ -133,26 +93,19 @@ impl ContourGreen {
             self.is_compatible(src),
             "incr_scaled_at: incompatible greens"
         );
-        if tstp == MATSUBARA {
-            self.mat.incr_scaled(&src.mat, alpha);
-            return;
-        }
-        self.check_tstp(tstp);
-        for (d, s) in self.ret.row_mut(tstp).iter_mut().zip(src.ret.row(tstp)) {
-            *d += *s * alpha;
-        }
-        for (d, s) in self.lmix.row_mut(tstp).iter_mut().zip(src.lmix.row(tstp)) {
-            *d += *s * alpha;
-        }
-        for (d, s) in self.less.row_mut(tstp).iter_mut().zip(src.less.row(tstp)) {
-            *d += *s * alpha;
-        }
+        incr_scaled_at(
+            (&mut self.mat, &mut self.ret, &mut self.lmix, &mut self.less),
+            (&src.mat, &src.ret, &src.lmix, &src.less),
+            tstp,
+            alpha,
+            self.nt,
+        );
     }
 
     /// `G[row tstp] += w * f`:
     /// row-scoped accumulation of a single-timestep object; at
     /// `MATSUBARA` only the mat component is updated.
-    pub fn incr_by_step(&mut self, f: &GreenTimeStep, tstp: i64, w: Complex) {
+    pub fn incr_by_step(&mut self, tstp: i64, f: &GreenTimeStep, w: Complex) {
         assert!(
             self.ntau == f.ntau && self.size1 == f.size1 && self.size2 == f.size2,
             "incr_by_step: incompatible shapes"
@@ -195,30 +148,37 @@ impl ContourGreen {
 
     /// Scale the components at `tstp` by a complex scalar.
     pub fn smul_at(&mut self, tstp: i64, a: Complex) {
-        if tstp == MATSUBARA {
-            self.mat.smul(a);
-            return;
-        }
-        self.check_tstp(tstp);
-        for z in self.ret.row_mut(tstp) {
-            *z *= a;
-        }
-        for z in self.lmix.row_mut(tstp) {
-            *z *= a;
-        }
-        for z in self.less.row_mut(tstp) {
-            *z *= a;
-        }
+        smul_at(
+            (&mut self.mat, &mut self.ret, &mut self.lmix, &mut self.less),
+            tstp,
+            a,
+            self.nt,
+        );
     }
 
     /// Range check of a real-time step shared by the `_at` operations.
     #[inline]
     pub(super) fn check_tstp(&self, tstp: i64) {
-        assert!(
-            (0..=self.nt as i64).contains(&tstp),
-            "tstp {tstp} out of range 0..={}",
-            self.nt
+        check_tstp(self.nt, tstp);
+    }
+
+    // ---- test helpers ----
+
+    /// Fill the components at `tstp` with `v`.
+    #[cfg(test)]
+    pub(crate) fn memset_at(&mut self, tstp: i64, v: Complex) {
+        memset_at(
+            (&mut self.mat, &mut self.ret, &mut self.lmix, &mut self.less),
+            tstp,
+            v,
+            self.nt,
         );
+    }
+
+    /// Zero the components at `tstp`.
+    #[cfg(test)]
+    pub(crate) fn set_zero_at(&mut self, tstp: i64) {
+        self.memset_at(tstp, Complex::ZERO);
     }
 }
 
@@ -448,6 +408,106 @@ impl LessComp {
 }
 
 // ------------------------------------------------------------------
+// the algebra at one time step, shared by the contour and the
+// pseudo-particle objects: both pass their four components
+// (mat, ret, lmix, less) as a tuple
+// ------------------------------------------------------------------
+
+/// Range check of a real-time step shared by the step operations.
+#[inline]
+pub(super) fn check_tstp(nt: usize, tstp: i64) {
+    assert!(
+        (0..=nt as i64).contains(&tstp),
+        "tstp {tstp} out of range 0..={nt}"
+    );
+}
+
+/// Copy the components at `tstp` (`MATSUBARA` = the Matsubara
+/// component) of `src` into `dst`.
+pub(crate) fn memcpy_at(
+    dst: (&mut MatComp, &mut RetComp, &mut LmixComp, &mut LessComp),
+    src: (&MatComp, &RetComp, &LmixComp, &LessComp),
+    tstp: i64,
+    nt: usize,
+) {
+    if tstp == MATSUBARA {
+        dst.0.memcpy_from(src.0);
+        return;
+    }
+    check_tstp(nt, tstp);
+    dst.1.row_mut(tstp).copy_from_slice(src.1.row(tstp));
+    dst.2.row_mut(tstp).copy_from_slice(src.2.row(tstp));
+    dst.3.row_mut(tstp).copy_from_slice(src.3.row(tstp));
+}
+
+/// Fill the components at `tstp` (`MATSUBARA` = the Matsubara
+/// component) with `v`.
+pub(crate) fn memset_at(
+    dst: (&mut MatComp, &mut RetComp, &mut LmixComp, &mut LessComp),
+    tstp: i64,
+    v: Complex,
+    nt: usize,
+) {
+    if tstp == MATSUBARA {
+        dst.0.memset(v);
+        return;
+    }
+    check_tstp(nt, tstp);
+    dst.1.row_mut(tstp).fill(v);
+    dst.2.row_mut(tstp).fill(v);
+    dst.3.row_mut(tstp).fill(v);
+}
+
+/// Scale the components at `tstp` (`MATSUBARA` = the Matsubara
+/// component) by `a`.
+pub(crate) fn smul_at(
+    dst: (&mut MatComp, &mut RetComp, &mut LmixComp, &mut LessComp),
+    tstp: i64,
+    a: Complex,
+    nt: usize,
+) {
+    if tstp == MATSUBARA {
+        dst.0.smul(a);
+        return;
+    }
+    check_tstp(nt, tstp);
+    for z in dst.1.row_mut(tstp) {
+        *z *= a;
+    }
+    for z in dst.2.row_mut(tstp) {
+        *z *= a;
+    }
+    for z in dst.3.row_mut(tstp) {
+        *z *= a;
+    }
+}
+
+/// Add `alpha` times the components at `tstp` (`MATSUBARA` = the
+/// Matsubara component) of `src`.
+pub(crate) fn incr_scaled_at(
+    dst: (&mut MatComp, &mut RetComp, &mut LmixComp, &mut LessComp),
+    src: (&MatComp, &RetComp, &LmixComp, &LessComp),
+    tstp: i64,
+    alpha: Complex,
+    nt: usize,
+) {
+    if tstp == MATSUBARA {
+        dst.0.incr_scaled(src.0, alpha);
+        return;
+    }
+    check_tstp(nt, tstp);
+    for (d, s) in dst.1.row_mut(tstp).iter_mut().zip(src.1.row(tstp)) {
+        *d += *s * alpha;
+    }
+    for (d, s) in dst.2.row_mut(tstp).iter_mut().zip(src.2.row(tstp)) {
+        *d += *s * alpha;
+    }
+    for (d, s) in dst.3.row_mut(tstp).iter_mut().zip(src.3.row(tstp)) {
+        *d += *s * alpha;
+    }
+}
+
+// ------------------------------------------------------------------
 // slice-level kernels (each loop written once)
 // ------------------------------------------------------------------
 
@@ -488,7 +548,6 @@ mod tests {
 
     use crate::types::{Contour, Sign};
 
-    use crate::algebra::frobenius_distance;
     use crate::storage::{set_timestep_at, timestep_at};
 
     const EPS: f64 = 1e-6;
@@ -535,21 +594,6 @@ mod tests {
         g
     }
 
-    /// Frobenius distance of two timestep objects at their common `tstp`.
-    fn slice_distance(a: &GreenTimeStep, b: &GreenTimeStep) -> f64 {
-        assert_eq!(a.tstp, b.tstp);
-        let tstp = a.tstp as i64;
-        let mut err = 0.0;
-        for j in 0..=tstp {
-            err += frobenius_distance(a.ret_raw_block(tstp, j), b.ret_raw_block(tstp, j));
-            err += frobenius_distance(a.less_raw_block(j, tstp), b.less_raw_block(j, tstp));
-        }
-        for q in 0..=(a.ntau as i64) {
-            err += frobenius_distance(a.lmix_raw_block(tstp, q), b.lmix_raw_block(tstp, q));
-        }
-        err
-    }
-
     fn mk(nt: usize) -> ContourGreen {
         let c = Contour::new(nt as i64, 2, 2, 2, 1.0, 1.0);
         ContourGreen::new(&c, Sign::Fermi, Complex::ZERO)
@@ -565,7 +609,7 @@ mod tests {
     }
 
     #[test]
-    fn whole_green_ops() {
+    fn green_whole_ops_chain() {
         let mut a = mk(2);
         fill(&mut a);
         let mut b = mk(2);
@@ -581,7 +625,7 @@ mod tests {
     }
 
     #[test]
-    fn timestep_scoped_ops() {
+    fn green_row_scoped_ops_chain() {
         let mut a = mk(2);
         fill(&mut a);
         let mut b = mk(2);
@@ -597,15 +641,15 @@ mod tests {
         assert_eq!(c.get_ret(2, 1, 0, 1), Complex::ZERO);
         // incr and smul at one step
         let mut d = mk(2);
-        d.incr_by_at(2, &a);
-        d.incr_by_at(2, &a);
+        d.incr_scaled_at(2, &a, Complex::ONE);
+        d.incr_scaled_at(2, &a, Complex::ONE);
         assert_eq!(d.get_ret(2, 1, 0, 1), Complex::new(6.0, 0.0));
         d.smul_at(2, Complex::new(0.5, 0.0));
         assert_eq!(d.get_ret(2, 1, 0, 1), Complex::new(3.0, 0.0));
     }
 
     #[test]
-    fn time_function_ops() {
+    fn time_function_whole_ops_chain() {
         let mut cf = TimeFunction::new(2, 1, 1, Complex::ZERO);
         cf.set(1, 0, 0, Complex::new(1.0, 0.0));
         cf.set(MATSUBARA, 0, 0, Complex::new(2.0, 0.0));
@@ -621,7 +665,7 @@ mod tests {
     }
 
     #[test]
-    fn force_matsubara_hermitian_test() {
+    fn mat_force_matsubara_hermitian() {
         let c = Contour::new(4, 5, 2, 2, 0.4, 1.0);
         let mut g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         let mut rng = Rng(0xF00D);
@@ -748,53 +792,10 @@ mod tests {
         let g1 = filled(4);
         let mut err = 0.0;
         for tstp in 0..=4 {
-            let a = timestep_at(&g1, tstp);
-            let b = timestep_at(&g1, tstp);
-            err += slice_distance(&a, &b);
-        }
-        assert!(err < EPS);
-        err = 0.0;
-        for tstp in 0..=4 {
             let mut g4m = g1.clone();
             let a = timestep_at(&g1, tstp);
             set_timestep_at(&mut g4m, &a);
             err += g1.distance_at(&g4m, tstp);
-        }
-        assert!(err < EPS);
-    }
-
-    #[test]
-    fn timestep_slice_zeros() {
-        let g1 = filled(4);
-        for tstp in 0..=4 {
-            let mut a = timestep_at(&g1, tstp);
-            let mut b = timestep_at(&g1, tstp);
-            a.set_zero();
-            b.set_zero();
-            assert!(a.equal(&b));
-        }
-        let mut err = 0.0;
-        for tstp in 0..=4 {
-            let mut a = timestep_at(&g1, tstp);
-            let mut b = timestep_at(&g1, tstp);
-            a.set_zero();
-            b.set_zero();
-            err += slice_distance(&a, &b);
-        }
-        assert!(err < EPS);
-    }
-
-    #[test]
-    fn timestep_slice_smul() {
-        let g1 = filled(4);
-        let alpha = Complex::new(2.0, 0.0);
-        let mut err = 0.0;
-        for tstp in 0..=4 {
-            let mut a = timestep_at(&g1, tstp);
-            let mut b = timestep_at(&g1, tstp);
-            a.smul(alpha);
-            b.smul(alpha);
-            err += slice_distance(&a, &b);
         }
         assert!(err < EPS);
     }
