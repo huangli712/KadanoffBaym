@@ -50,6 +50,7 @@ use crate::base::check_moving_solver;
 use crate::linalg::axpy_c;
 use crate::linalg::{solve_block_left, solve_block_left_single};
 use crate::linalg::{solve_block_right, solve_block_right_single};
+use crate::types::neg_adjoint_block_into;
 
 /// Solve the truncated VIE2 for the leading row (0-based time step
 /// `tstp`) of the moving Green's function `g`. Pass one
@@ -57,7 +58,7 @@ use crate::linalg::{solve_block_right, solve_block_right_single};
 /// the time-step loop; reuse is valid while the moving kernel `f`/`fcc`
 /// pair is unchanged.
 #[allow(clippy::too_many_arguments)]
-pub fn vie2_timestep_moving(
+pub fn vie2_moving_timestep(
     tstp: i64,
     g: &mut MovingGreen,
     f: &MovingGreen,
@@ -232,12 +233,7 @@ fn vie2_moving_less(
                 out.raw_mut()[z] = wles(f, m, j)[z];
             }
         } else {
-            let src = wles(fcc, j, m);
-            for a in 0..d {
-                for b in 0..d {
-                    out.set(a, b, -src[b * d + a].conj());
-                }
-            }
+            neg_adjoint_block_into(wles(fcc, j, m), out.raw_mut(), d);
         }
     };
 
@@ -264,13 +260,8 @@ fn vie2_moving_less(
 
     // Q^{<}(j, n) = -Q^{<}(n, j)^dagger
     let qles = |j: i64| -> DenseMat {
-        let src = wles(q, n, j);
         let mut out = DenseMat::zeros(d);
-        for a in 0..d {
-            for b in 0..d {
-                out.set(a, b, -src[b * d + a].conj());
-            }
-        }
+        neg_adjoint_block_into(wles(q, n, j), out.raw_mut(), d);
         out
     };
 
@@ -343,12 +334,7 @@ fn vie2_moving_less(
     // j < n; the diagonal block is stored as it is solved.
     for j in 0..n {
         let src = gles[j as usize].raw();
-        let blk = g.less.mblock_mut(0, n - j);
-        for a in 0..d {
-            for b in 0..d {
-                blk[a * d + b] = -src[b * d + a].conj();
-            }
-        }
+        neg_adjoint_block_into(src, g.less.mblock_mut(0, n - j), d);
     }
     g.less
         .mblock_mut(0, 0)
@@ -377,7 +363,7 @@ mod tests {
 
     /// One workspace across the loop equals a fresh workspace per step.
     #[test]
-    fn vie2_timestep_moving_matches_fresh_workspace() {
+    fn vie2_moving_timestep_matches_fresh_workspace() {
         let (nt, ntau, beta, h, k, tc) = (14i64, 16i64, 4.0f64, 0.05, 3i64, 10i64);
         let c = Contour::new(nt, ntau, 2, 2, nt as f64 * h, beta);
         let h0 = DenseMat::from_rows(&[
@@ -404,8 +390,8 @@ mod tests {
             let tstp = g1.tstp;
             let fresh_integ = Integrator::new(k);
             let mut fresh_mws = MovingVie2Workspace::new(k, 2);
-            vie2_timestep_moving(tstp, &mut g1, &f, &fcc, &q, h, &fresh_integ, &mut fresh_mws);
-            vie2_timestep_moving(tstp, &mut g2, &f, &fcc, &q, h, &integ, &mut mws);
+            vie2_moving_timestep(tstp, &mut g1, &f, &fcc, &q, h, &fresh_integ, &mut fresh_mws);
+            vie2_moving_timestep(tstp, &mut g2, &f, &fcc, &q, h, &integ, &mut mws);
             for g in [&mut g1, &mut g2, &mut f, &mut fcc, &mut q] {
                 forward(g);
             }
