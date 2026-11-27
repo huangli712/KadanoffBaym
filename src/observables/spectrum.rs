@@ -21,15 +21,9 @@ pub enum SpectrumMethod {
 /// `j = 0, ..., min(tav, nt - tav)` with `nt` the number of real time
 /// intervals, the times are `t1 = tav + j` and `t2 = tav - j`.
 ///
-/// ### Arguments
-/// * G   -> Contour Green's function, the matrices must be square.
-/// * tav -> Average time step, `1 ≤ tav ≤ getntime(G)`.
-/// * h   -> Time step.
-///
-/// ### Returns
-/// * t_rel -> Relative times ``2jh``, a vector.
-/// * ret   -> ``G^R(t_1, t_2)``, an array of the size `(t_rel.len(), d, d)`.
-/// * les   -> ``G^<(t_1, t_2)``, an array of the size `(t_rel.len(), d, d)`.
+/// Returns the relative times `2jh`, the retarded blocks `G^R(t_1, t_2)`
+/// and the lesser blocks `G^<(t_1, t_2)`, one flat `d x d` vector per
+/// time point.
 ///
 /// HDF5 is not supported; the slices are taken from `G` directly.
 pub fn wigner_slices(
@@ -109,17 +103,9 @@ fn linear_fourier(v: &[Complex], t: &[f64], w: f64) -> Complex {
 /// * `method = SpectrumMethod::Linear`: the exact integral of the linear interpolation, at
 ///   least two points are needed.
 ///
-/// ### Arguments
-/// * gret   -> Retarded component, an array of the size `(nt, d, d)`, see
-///   `wigner_slices()`.
-/// * t_rel  -> Equidistant time grid, length `nt`.
-/// * omega  -> Frequencies.
-/// * method -> `SpectrumMethod::Cubic` or `SpectrumMethod::Linear`.
-/// * window -> Window function, `window(t_rel)` returns a real or complex
-///   vector of the length `nt`.
-///
-/// ### Returns
-/// * A -> Spectral function, a real array of the size `(omega.len(), d)`.
+/// Returns the spectral function `A[w][i]` for every frequency index `w`
+/// of `omega` and every orbital `i`. `window` maps the time grid to a
+/// complex vector of the length `nt`.
 ///
 /// The `SpectrumMethod::Cubic` method evaluates the integral with the
 /// cubically corrected DFT `dft_cplx`.
