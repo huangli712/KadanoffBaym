@@ -173,10 +173,10 @@
             \code{conv_ret_kernel_d1} \\
         \code{_herm} & 利用厄米性减少一半计算 &
             \code{bubble1_herm} \\
-        \code{_moving} & 移动窗版本 &
-            \code{dyson_timestep_moving} \\
-        \code{_pseudo} & 赝粒子版本 &
-            \code{pseudo_dyson} \\
+        \code{_moving} & 移动窗版本的算法 &
+            \code{bubble1_moving}, \code{extrapolate_timestep_moving} \\
+        \code{pseudo_} / \code{moving_} & 前缀：作用在特定类型的对象上 &
+            \code{pseudo_dyson}, \code{moving_distance} \\
         \bottomrule
     \end{tabularx}
 \end{table}
@@ -200,24 +200,24 @@
         \midrule
 % BEGIN GENERATED SIZE TABLE (gen_modules.py)
         \code{complex} & 4 &  387 & 8 \\
-        \code{linalg} & 7 & 2198 & 28 \\
-        \code{math} & 7 & 2433 & 19 \\
-        \code{types} & 14 & 2852 & 108 \\
+        \code{linalg} & 7 & 2232 & 28 \\
+        \code{math} & 7 & 2476 & 19 \\
+        \code{types} & 14 & 2857 & 108 \\
         \code{base} & 6 &  667 & 1 \\
         \code{storage} & 6 & 1246 & 50 \\
         \code{algebra} & 5 & 2823 & 87 \\
         \code{variants} & 4 & 1104 & 30 \\
-        \code{weights} & 8 & 1340 & 13 \\
-        \code{convolution} & 13 & 6902 & 44 \\
-        \code{dyson} & 10 & 3470 & 27 \\
-        \code{vie2} & 10 & 3201 & 24 \\
-        \code{equilibrium} & 6 & 2014 & 9 \\
+        \code{weights} & 8 & 2205 & 13 \\
+        \code{convolution} & 13 & 6922 & 44 \\
+        \code{dyson} & 10 & 3438 & 26 \\
+        \code{vie2} & 10 & 3189 & 24 \\
+        \code{equilibrium} & 6 & 2045 & 10 \\
         \code{fourier} & 7 & 2623 & 26 \\
-        \code{observables} & 5 &  447 & 11 \\
+        \code{observables} & 5 &  439 & 11 \\
         \code{io} & 8 & 2019 & 12 \\
-        \code{lib.rs} & 1 &   54 & 0 \\
+        \code{lib.rs} & 1 &   55 & 0 \\
         \midrule
-        合计 & 121 & 35\,780 & 497 \\
+        合计 & 121 & 36\,727 & 497 \\
 % END GENERATED SIZE TABLE (gen_modules.py)
         \bottomrule
     \end{tabular}

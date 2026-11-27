@@ -244,15 +244,15 @@ $t_c-k$ 个相对偏移。靠近窗口末端时，索引要平移
 
 移动窗的距离有两种：
 \begin{itemize}
-    \item \code{distance_moving}：两个时间步视图之间的逐块
+    \item \code{moving_distance}：两个时间步视图之间的逐块
           Frobenius 距离之和；
-    \item \code{distance_moving_at}：两个窗口在同一个绝对时间步上
+    \item \code{moving_distance_at}：两个窗口在同一个绝对时间步上
           的对应行之间的距离，先按各自的 \code{tstp} 换算相对指标。
 \end{itemize}
 求解器入口还会检查窗口的兼容性：窗口长度、维数、统计符号与
 领头时间步必须一致。几何检查由
 \code{check_moving_solver} 完成，$\bm{H}$ 的检查由
-\code{check_hamiltonian_moving} 完成。
+\code{check_moving_hamiltonian} 完成。
 
 \section{截断卷积}
 \label{sec:moving-convolution}
@@ -272,7 +272,7 @@ $n$ 只遍历窗口内的 $j$，因此单步代价为 $O(t_c)$，与总时间步
 \section{截断 Dyson}
 \label{sec:moving-dyson}
 
-\code{dyson_timestep_moving} 在窗口内求解推迟与小于分量。推迟
+\code{dyson_moving_timestep} 在窗口内求解推迟与小于分量。推迟
 分量按列推进：每列 $m$ 的未知块只依赖窗口内的历史，因此系统
 规模为 $O(t_c)\times O(t_c)$。小于分量的源项由窗口内的
 $[\Sig^{R}\Gless+\Sig^{<}\Gadv]$ 累加得到，再逐列求解。
@@ -284,7 +284,7 @@ $[\Sig^{R}\Gless+\Sig^{<}\Gadv]$ 累加得到，再逐列求解。
 \section{截断 VIE2}
 \label{sec:moving-vie2}
 
-\code{vie2_timestep_moving} 的结构与 Dyson 版本相同：推迟分量用
+\code{vie2_moving_timestep} 的结构与 Dyson 版本相同：推迟分量用
 $k\times k$ 的启动系统与逐列推进，小于分量用 $(k+1)\times(k+1)$
 的启动系统与逐列推进。核 $F$ 与源 $Q$ 都按移动窗存储。该接口
 支持各阶求解，但为了保持逐位可复现，内部不做并行。
