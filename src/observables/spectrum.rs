@@ -81,12 +81,6 @@ fn linear_fourier(v: &[Complex], t: &[f64], w: f64) -> Complex {
 }
 
 /// Windowed spectral function of the diagonal elements,
-/// `A_ii(w) = -1/pi Im integral dt e^{i w t} W(t) G^R_ii(t)`, on the
-/// arbitrary frequencies `omega` over the equidistant grid `t_rel`.
-/// `gret` holds one `d x d` block per time point (see
-/// `wigner_slices`).
-///
-/// Windowed spectral function of the diagonal elements,
 ///
 /// ```math
 /// A_{ii}(\\omega) = -\\frac{1}{\\pi}\\mathrm{Im}\\int dt\\ e^{i\\omega t}
@@ -94,7 +88,8 @@ fn linear_fourier(v: &[Complex], t: &[f64], w: f64) -> Complex {
 /// ```
 ///
 /// on the arbitrary frequencies `omega`. The integral runs over the
-/// equidistant grid `t_rel`.
+/// equidistant grid `t_rel`; `gret` holds one `d x d` block per time
+/// point (see `wigner_slices`).
 ///
 /// * `method = SpectrumMethod::Cubic`: the corrected DFT `dft_cplx()`. The number of the
 ///   intervals `t_rel.len() - 1` must be even and larger than 16,
@@ -106,9 +101,6 @@ fn linear_fourier(v: &[Complex], t: &[f64], w: f64) -> Complex {
 /// Returns the spectral function `A[w][i]` for every frequency index `w`
 /// of `omega` and every orbital `i`. `window` maps the time grid to a
 /// complex vector of the length `nt`.
-///
-/// The `SpectrumMethod::Cubic` method evaluates the integral with the
-/// cubically corrected DFT `dft_cplx`.
 pub fn evaluate_spectrum_windowed(
     gret: &[Vec<Complex>],
     t_rel: &[f64],
