@@ -29,7 +29,7 @@ use crate::weights::Integrator;
 
 use crate::types::MATSUBARA;
 
-use crate::convolution::full::check_conv_args;
+use crate::convolution::check::check_conv_args;
 use crate::convolution::incr_convolution_mat;
 use crate::convolution::mat::incr_convolution_mat_step;
 use crate::convolution::{incr_convolution_less, incr_convolution_less_step};
