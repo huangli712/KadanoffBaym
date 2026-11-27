@@ -99,7 +99,7 @@ Kadanoff--Baym 方程是这套框架的运动方程。把 Dyson 方程按时间�
         三角偏移 \code{triangular_row_offset}、行优先块布局 \\
         工作区复用 &
         内核不分配随步数增长的内存 &
-        \code{ConvWorkspace}、\code{DysonWs}、\code{BlockSolver} \\
+        \code{ConvWorkspace}、\code{DysonWorkspace}、\code{BlockSolver} \\
         可见性收敛 &
         默认私有，只有确属公共接口的符号才导出 &
         各模块 \code{mod.rs} 中 \code{pub} 与 \code{pub(crate)} 分组 \\
@@ -107,8 +107,8 @@ Kadanoff--Baym 方程是这套框架的运动方程。把 Dyson 方程按时间�
         每个模块、每个公共函数都写明公式、参数与约定 &
         \code{//!} 与 \code{///} 文档块 \\
         精确优先 &
-        权重表用有理数精确构造，最后才转浮点 &
-        \code{Rational} 与 \code{calc_gregory} \\
+        Gregory 权重表用有理数精确构造，最后才转浮点 &
+        \code{Rational} 与 \code{calc_gregory_integration} \\
         逐点可复现 &
         参考数据比对到舍入误差 &
         \code{data/} 下的文本参考数据与集成测试 \\

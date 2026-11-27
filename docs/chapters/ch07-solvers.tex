@@ -221,9 +221,9 @@ $(k+1)\times(k+1)$ 系统，在时间推进阶段复用 ret/less/lmix 三个
 \begin{itemize}
     \item \code{BlockSolver}：块系统的组装矩阵与 LU 分解；
     \item \code{ConvWorkspace}：卷积的中间乘积；
-    \item \code{DysonWs}：时间推进中复用的乘积块与右端缓冲。
+    \item \code{DysonWorkspace}：时间推进中复用的乘积块与右端缓冲。
 \end{itemize}
 各工作区的生命周期取决于调用入口。标准 Dyson 的单步驱动将一个
-\code{DysonWs} 依次交给推迟和小于求解。块系统系数随时间指标变化时，
+\code{DysonWorkspace} 依次交给推迟和小于求解。块系统系数随时间指标变化时，
 工作区复用的是存放矩阵、枢轴与右端的内存，新的系数仍需重新分解。
 左混合同一行的多右端共享系数，因此可复用该行的分解。

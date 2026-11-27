@@ -107,7 +107,7 @@ pub struct ConvWorkspace {
 
 \begin{lstlisting}[caption={固定维数块乘法},label={lst:mulaccd}]
 #[inline(always)]
-pub(crate) fn mul_acc_d<const D: usize, const N: usize>(
+fn mul_acc_d<const D: usize, const N: usize>(
     acc: &mut [Complex; N],
     w: Complex,
     a: &[Complex; N],
