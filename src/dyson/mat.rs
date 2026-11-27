@@ -18,11 +18,11 @@ use crate::types::MATSUBARA;
 
 use crate::base::{matsubara_cg, matsubara_fixpoint};
 use crate::convolution::conv_mat;
-use crate::equilibrium::{check_hamiltonian, fill_matsubara, minus_mu};
+use crate::equilibrium::{check_hamiltonian, from_ham_mat};
 use crate::fourier::first_order_tail;
-use crate::linalg::{eigh, mat_inv};
+use crate::linalg::mat_inv;
 
-use crate::dyson::full::check_dyson;
+use crate::dyson::check::check_dyson;
 
 ///
 /// *Remarks* : *Matsubara Dyson Equation*
@@ -116,7 +116,7 @@ pub fn dyson_mat_kernel(
     let sign = g.sign;
     let d = g.size1;
     let mut g0 = MatComp::new(g.ntau, d, d, Complex::ZERO);
-    free_mat(&mut g0, mu, h, beta, sign);
+    from_ham_mat(&mut g0, mu, h, beta, sign);
     let mut f = MatComp::new(g.ntau, d, d, Complex::ZERO);
     conv_mat(&mut f, &g0, &sigma.mat, integ, beta, sign);
     f.smul(Complex::new(-1.0, 0.0));
@@ -171,17 +171,9 @@ pub fn dyson_mat_cg(
 /// number of imaginary time intervals must be even. It is a private
 /// function.
 ///
-/// ### Arguments
-/// * G     -> Contour-ordered Green's function.
-/// * Σ     -> Self-energy.
-/// * μ     -> Chemical potential.
-/// * H     -> Hamiltonian, only `H[0]` is used.
-/// * β     -> Inverse temperature.
-/// * pcf   -> Number of the oversampling copies on each side.
-/// * order -> Order of the boundary correction of the Fourier transform.
-///
-/// ### Returns
-/// * G -> Contour-ordered Green's function.
+/// The solution is written into the Matsubara component of `g`; only
+/// the Matsubara component of `sigma` and only the Matsubara block of
+/// `h` are read.
 pub(crate) fn dyson_mat_fourier(
     g: &mut ContourGreen,
     sigma: &ContourGreen,
@@ -290,32 +282,6 @@ pub(crate) fn dyson_mat_fourier(
     );
 }
 
-/// Free Matsubara Green's function of the hermitian matrix `H[MATSUBARA]`:
-/// `-R diag(e^{tau lambda} n_F(lambda)) R^dag` for fermions and
-/// `+R diag(e^{tau lambda} n_B(lambda)) R^dag` for bosons, where
-/// `mu*I - H = R diag(lambda) R^dag`.
-///
-/// ### Arguments
-/// * G0   -> Matsubara Green's function.
-/// * μ    -> Chemical potential.
-/// * H    -> Hamiltonian.
-/// * β    -> Inverse temperature.
-/// * sign -> FERMI or BOSE.
-///
-/// ### Returns
-/// * G0 -> Matsubara Green's function.
-pub fn free_mat(g0: &mut MatComp, mu: f64, h: &TimeFunction, beta: f64, sign: Sign) {
-    let d = g0.size1;
-    check_hamiltonian(h, once(MATSUBARA), d);
-
-    // K = mu*I - H and its eigendecomposition
-    let h0 = DenseMat::from_slice(d, d, h.block(MATSUBARA));
-    let mut k = minus_mu(&h0, mu);
-    k.scale(-1.0);
-    let (lambda, r) = eigh(&k);
-    fill_matsubara(g0, &lambda, &r, beta, sign == Sign::Fermi);
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -344,7 +310,7 @@ mod tests {
     /// Analytic free solution for Sigma = 0: G^M(tau) = -R diag(e^{tau
     /// lambda} n_F(lambda)) R^dag with lambda = eigenvalues of mu*I - H.
     #[test]
-    fn sigma_zero_returns_free_mat() {
+    fn sigma_zero_returns_from_ham_mat() {
         let (beta, mu) = (4.0f64, 0.0);
         for method in [
             MatsubaraMethod::Fixpoint,
@@ -355,7 +321,7 @@ mod tests {
             dyson_mat(&mut g, &sigma, mu, &h, beta, 5, method, true, None, 1e-12);
             // free reference from from_mat
             let mut want = MatComp::new(100, 2, 2, Complex::ZERO);
-            free_mat(&mut want, mu, &h, beta, Sign::Fermi);
+            from_ham_mat(&mut want, mu, &h, beta, Sign::Fermi);
             let mut err = 0.0f64;
             for q in 0..want.raw().len() {
                 err = err.max((g.mat.raw()[q] - want.raw()[q]).abs());
