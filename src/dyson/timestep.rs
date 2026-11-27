@@ -1,6 +1,7 @@
 // Project : KadanoffBaym
 // File    : src/dyson/timestep.rs
-// Purpose : time stepping of the real time Dyson components
+// Purpose : time stepping of the real time Dyson components: the
+//           per-component kernels (the public drivers live in full.rs)
 
 //!
 //! *Remarks* : *Real Time Dyson Equation*
@@ -75,70 +76,6 @@ use crate::linalg::{solve_block_right, solve_block_right_single};
 use crate::types::{adjoint_block_into, triangular_row_offset};
 
 use crate::dyson::workspace::DysonWorkspace;
-
-use crate::dyson::full::check_dyson_rt;
-
-/// Solve the Dyson equation at the real time step `tstp > solve_order`.
-/// The previous time steps of `g` must be known; the Matsubara component
-/// is not recalculated.
-///
-/// Convenience wrapper: builds a fresh workspace on every call. In
-/// time-step loops build a [`DysonWorkspace`] (and an `Integrator`)
-/// once and call [`dyson_timestep_ws`] instead.
-#[allow(clippy::too_many_arguments)]
-pub fn dyson_timestep(
-    tstp: i64,
-    g: &mut ContourGreen,
-    mu: f64,
-    h: &TimeFunction,
-    sigma: &ContourGreen,
-    beta: f64,
-    hstep: f64,
-    solve_order: i64,
-) {
-    let k = solve_order;
-    assert!(
-        tstp > k,
-        "dyson_timestep: time step {tstp} must be larger than {k}"
-    );
-    check_dyson_rt(g, sigma, h, k, tstp);
-    assert!(beta > 0.0, "beta must be positive");
-    assert!(hstep > 0.0, "h must be positive");
-
-    let integ = Integrator::new(k);
-    let mut ws = DysonWorkspace::new(k, g.size1, g.ntau);
-    dyson_timestep_ws(tstp, g, mu, h, sigma, beta, hstep, &integ, &mut ws);
-}
-
-/// Workspace-reusing variant of [`dyson_timestep`]: pass one
-/// `DysonWorkspace` (and one `Integrator`) built before the time-step
-/// loop. Reuse is valid while `sigma` is unchanged; the lesser-path
-/// convolution cache in the workspace assumes the same input sequence.
-#[allow(clippy::too_many_arguments)]
-pub fn dyson_timestep_ws(
-    tstp: i64,
-    g: &mut ContourGreen,
-    mu: f64,
-    h: &TimeFunction,
-    sigma: &ContourGreen,
-    beta: f64,
-    hstep: f64,
-    integ: &Integrator,
-    ws: &mut DysonWorkspace,
-) {
-    let k = integ.k;
-    assert!(
-        tstp > k,
-        "dyson_timestep: time step {tstp} must be larger than {k}"
-    );
-    check_dyson_rt(g, sigma, h, k, tstp);
-    assert!(beta > 0.0, "beta must be positive");
-    assert!(hstep > 0.0, "h must be positive");
-
-    dyson_timestep_ret_ws(tstp, g, mu, h, sigma, hstep, integ, ws);
-    dyson_timestep_lmix_ws(tstp, g, mu, h, sigma, beta, hstep, integ, ws);
-    dyson_timestep_less_ws(tstp, g, mu, h, sigma, beta, hstep, integ, ws);
-}
 
 /// Time stepping of the retarded component `G^R(n, j)` for `0 <= j <= n`
 /// with `n > k`.
@@ -284,8 +221,8 @@ pub(super) fn dyson_timestep_ret_ws(
     } else {
         // d = 2, 4: fixed-size kernels; all other sizes: generic product
         match d {
-            2 => acc_start_cols::<2, 4>(qq, &mut ws.prod, g, sigma, integ, n, k),
-            4 => acc_start_cols::<4, 16>(qq, &mut ws.prod, g, sigma, integ, n, k),
+            2 => acc_ret_start::<2, 4>(qq, &mut ws.prod, g, sigma, integ, n, k),
+            4 => acc_ret_start::<4, 16>(qq, &mut ws.prod, g, sigma, integ, n, k),
             _ => {
                 for m in (n - k)..=n {
                     let gnm = g.ret.raw_block_at(n, m);
@@ -360,19 +297,8 @@ pub(super) fn dyson_timestep_ret_ws(
         } else {
             // d = 2, 4: fixed-size kernels; all other sizes: generic product
             match d {
-                2 => {
-                    acc_col_products::<2, 4>(qq, &mut ws.prod, sigma, integ, n, j, gnj.raw(), j - 1)
-                }
-                4 => acc_col_products::<4, 16>(
-                    qq,
-                    &mut ws.prod,
-                    sigma,
-                    integ,
-                    n,
-                    j,
-                    gnj.raw(),
-                    j - 1,
-                ),
+                2 => acc_ret_row::<2, 4>(qq, &mut ws.prod, sigma, integ, n, j, gnj.raw(), j - 1),
+                4 => acc_ret_row::<4, 16>(qq, &mut ws.prod, sigma, integ, n, j, gnj.raw(), j - 1),
                 _ => {
                     for j2 in 0..j {
                         let w = integ.giw.at((n - j2) as usize, (n - j) as usize);
@@ -742,7 +668,7 @@ pub fn dyson_less_core(
 /// `j2 = 0..=jhi`; the product is accumulated in `prod`.
 #[allow(clippy::too_many_arguments)]
 #[inline(always)]
-fn acc_col_products<const D: usize, const N: usize>(
+fn acc_ret_row<const D: usize, const N: usize>(
     qq: &mut [Complex],
     prod: &mut DenseMat,
     sigma: &ContourGreen,
@@ -769,7 +695,7 @@ fn acc_col_products<const D: usize, const N: usize>(
 /// [`dyson_timestep_ret_ws`]: the contributions of `G^R(n, m)`,
 /// `m = n-k, .., n`.
 #[inline(always)]
-fn acc_start_cols<const D: usize, const N: usize>(
+fn acc_ret_start<const D: usize, const N: usize>(
     qq: &mut [Complex],
     prod: &mut DenseMat,
     g: &ContourGreen,
@@ -779,7 +705,7 @@ fn acc_start_cols<const D: usize, const N: usize>(
     k: i64,
 ) {
     for m in (n - k)..=n {
-        acc_col_products::<D, N>(
+        acc_ret_row::<D, N>(
             qq,
             prod,
             sigma,
@@ -853,8 +779,10 @@ mod tests {
         }
         let mut dws = DysonWorkspace::new(k, 2, ntau as usize);
         for tstp in (k + 1)..=nt {
-            dyson_timestep(tstp, &mut g1, 0.0, &hh, &sigma, beta, h, k);
-            dyson_timestep_ws(tstp, &mut g2, 0.0, &hh, &sigma, beta, h, &integ, &mut dws);
+            crate::dyson::dyson_timestep(tstp, &mut g1, 0.0, &hh, &sigma, beta, h, k);
+            crate::dyson::dyson_timestep_ws(
+                tstp, &mut g2, 0.0, &hh, &sigma, beta, h, &integ, &mut dws,
+            );
         }
         assert!(g1.equal(&g2));
     }
