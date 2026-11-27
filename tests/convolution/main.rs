@@ -9,4 +9,6 @@ mod util;
 
 mod incremental;
 mod kernels;
+mod nonsquare;
 mod reference;
+mod response;

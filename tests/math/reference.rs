@@ -245,7 +245,7 @@ fn utilities_reference() {
         from_ham(&mut g1, 0.0, &ham1, beta, h);
         from_ham(&mut g2, 0.0, &ham3, beta, h);
         let s2 = timestep_slice(&g2, 0);
-        g1.incr_by_step(&s2, MATSUBARA, Complex::new(0.0, 1.0));
+        g1.incr_by_step(MATSUBARA, &s2, Complex::new(0.0, 1.0));
         g1.mat.force_matsubara_hermitian();
         let mut err = 0.0;
         for m in 0..=ntauk {

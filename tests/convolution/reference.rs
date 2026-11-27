@@ -21,15 +21,15 @@ use super::util::prelude::*;
 // constants
 // ------------------------------------------------------------------
 
-const CONV_BETA: f64 = 4.0;
+pub(super) const CONV_BETA: f64 = 4.0;
 
-const CONV_H: f64 = 0.05;
+pub(super) const CONV_H: f64 = 0.05;
 
 const CONV_MU: f64 = 0.1;
 
-const CONV_NT: i64 = 30;
+pub(super) const CONV_NT: i64 = 30;
 
-const CONV_NTAU: i64 = 60;
+pub(super) const CONV_NTAU: i64 = 60;
 
 // ------------------------------------------------------------------
 // helpers
@@ -37,34 +37,38 @@ const CONV_NTAU: i64 = 60;
 
 /// Free fermionic Green's function for H(t) = H_0 + a(t) I (closed
 /// form, nothing read back from the reference output).
-fn conv_green(which: usize, size: usize) -> (Contour, ContourGreen) {
-    let c = Contour::new(
-        CONV_NT,
-        CONV_NTAU,
-        size as i64,
-        size as i64,
-        CONV_NT as f64 * CONV_H,
-        CONV_BETA,
-    );
+pub(super) fn conv_green(which: usize, size: usize) -> (Contour, ContourGreen) {
+    conv_green_grid(which, size, CONV_NT, CONV_NTAU, CONV_BETA, CONV_H)
+}
+
+/// `conv_green` on the grid `(nt, ntau, beta, h)`.
+pub(super) fn conv_green_grid(
+    which: usize,
+    size: usize,
+    nt: i64,
+    ntau: i64,
+    beta: f64,
+    h: f64,
+) -> (Contour, ContourGreen) {
+    let c = Contour::new(nt, ntau, size as i64, size as i64, nt as f64 * h, beta);
     let mut g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
-    let h = conv_hamiltonian(which);
+    let ham = conv_hamiltonian(which);
     // epsilon = H0[0:size,0:size] - mu I
     let mut eps = DenseMat::zeros(size);
     for i in 0..size {
         for j in 0..size {
-            eps.set(i, j, h.get(i, j));
+            eps.set(i, j, ham.get(i, j));
         }
         eps.set(i, i, eps.get(i, i) - Complex::new(CONV_MU, 0.0));
     }
     let (vals, v) = eigh(&eps);
     // Matsubara component
-    for q in 0..=CONV_NTAU {
-        let tau = q as f64 * CONV_BETA / CONV_NTAU as f64;
+    for q in 0..=ntau {
+        let tau = q as f64 * beta / ntau as f64;
         let gv: Vec<Complex> = vals
             .iter()
             .map(|&l| {
-                -Complex::new((-l * tau).exp(), 0.0)
-                    / Complex::new(1.0 + (-CONV_BETA * l).exp(), 0.0)
+                -Complex::new((-l * tau).exp(), 0.0) / Complex::new(1.0 + (-beta * l).exp(), 0.0)
             })
             .collect();
         let m = diagonal_transform(&v, &vals, &gv);
@@ -76,8 +80,8 @@ fn conv_green(which: usize, size: usize) -> (Contour, ContourGreen) {
     }
     // Evolution and density
     let mut us = Vec::new();
-    for i in 0..=CONV_NT {
-        let t = i as f64 * CONV_H;
+    for i in 0..=nt {
+        let t = i as f64 * h;
         let gv: Vec<Complex> = vals
             .iter()
             .map(|&l| Complex::from_polar(1.0, -l * t))
@@ -91,10 +95,10 @@ fn conv_green(which: usize, size: usize) -> (Contour, ContourGreen) {
     }
     let rhov: Vec<Complex> = vals
         .iter()
-        .map(|&l| Complex::new(1.0 / (1.0 + (CONV_BETA * l).exp()), 0.0))
+        .map(|&l| Complex::new(1.0 / (1.0 + (beta * l).exp()), 0.0))
         .collect();
     let rho = diagonal_transform(&v, &vals, &rhov);
-    for i in 0..=CONV_NT {
+    for i in 0..=nt {
         for j in 0..=i {
             let m = us[i as usize].mat_mul(&us[j as usize].adjoint());
             for a in 0..size {
@@ -103,7 +107,7 @@ fn conv_green(which: usize, size: usize) -> (Contour, ContourGreen) {
                 }
             }
         }
-        for j in i..=CONV_NT {
+        for j in i..=nt {
             let m = us[i as usize]
                 .mat_mul(&rho)
                 .mat_mul(&us[j as usize].adjoint());
@@ -113,13 +117,12 @@ fn conv_green(which: usize, size: usize) -> (Contour, ContourGreen) {
                 }
             }
         }
-        for q in 0..=CONV_NTAU {
-            let tau = q as f64 * CONV_BETA / CONV_NTAU as f64;
+        for q in 0..=ntau {
+            let tau = q as f64 * beta / ntau as f64;
             let gv: Vec<Complex> = vals
                 .iter()
                 .map(|&l| {
-                    Complex::new((l * tau).exp(), 0.0)
-                        / Complex::new(1.0 + (CONV_BETA * l).exp(), 0.0)
+                    Complex::new((l * tau).exp(), 0.0) / Complex::new(1.0 + (beta * l).exp(), 0.0)
                 })
                 .collect();
             let m = diagonal_transform(&v, &vals, &gv);
@@ -150,7 +153,7 @@ fn conv_hamiltonian(which: usize) -> DenseMat {
     m
 }
 
-fn conv_middle(t: f64) -> DenseMat {
+pub(super) fn conv_middle(t: f64) -> DenseMat {
     let mut m = DenseMat::zeros(2);
     m.set(0, 0, Complex::new(1.0 + 0.2 * t, 0.0));
     m.set(0, 1, Complex::new(0.1, 0.3 * t));
@@ -159,7 +162,7 @@ fn conv_middle(t: f64) -> DenseMat {
     m
 }
 
-fn conv_middle_function(size: usize) -> TimeFunction {
+pub(super) fn conv_middle_function(size: usize) -> TimeFunction {
     let mut f = TimeFunction::new(CONV_NT as usize, size, size, Complex::ZERO);
     let m0 = conv_middle(0.0);
     for a in 0..size {
@@ -178,7 +181,7 @@ fn conv_middle_function(size: usize) -> TimeFunction {
     f
 }
 
-fn data_dir() -> PathBuf {
+pub(super) fn data_dir() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("data")
         .join("test")
@@ -204,7 +207,7 @@ fn phase_factor(which: usize, t: f64) -> f64 {
 
 /// Per-component max errors of `g` against the ref rows (mat, ret,
 /// tv, les) with combined absolute/relative tolerance weights.
-fn reference_green(g: &ContourGreen, data: &RefData, atol: f64, rtol: f64) -> [f64; 4] {
+pub(super) fn reference_green(g: &ContourGreen, data: &RefData, atol: f64, rtol: f64) -> [f64; 4] {
     let mut errs = [0.0f64; 4];
     for r in &data.rows {
         let (got, slot) = match r.component.as_str() {

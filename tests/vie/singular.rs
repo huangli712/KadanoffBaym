@@ -122,7 +122,7 @@ fn vie2_singular_kernel() {
         let gsm = DenseMat::from_vec(2, 2, gsx.block(t).to_vec());
         fg.rmul_at(t, &gsm, Adjoint::No);
         let step = timestep_at(&fg, t.max(0));
-        qd.incr_by_step(&step, t, Complex::ONE);
+        qd.incr_by_step(t, &step, Complex::ONE);
     }
     let mut g3 = ContourGreen::new(&s.contour, Sign::Fermi, Complex::ZERO);
     let mut gs3 = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);

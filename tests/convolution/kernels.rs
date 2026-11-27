@@ -32,11 +32,11 @@ fn exact_solution(g1: &ContourGreen, g2: &ContourGreen) -> ContourGreen {
     let w = Complex::new(-1.0, 0.0);
     // Matsubara + all real rows
     let f2 = timestep_at(g2, 0);
-    g3.incr_by_step(&f2, MATSUBARA, w);
+    g3.incr_by_step(MATSUBARA, &f2, w);
     g3.smul_at(MATSUBARA, Complex::new(fac, 0.0));
     for tstp in 0..=(g3.nt as i64) {
         let f2 = timestep_at(g2, tstp);
-        g3.incr_by_step(&f2, tstp, w);
+        g3.incr_by_step(tstp, &f2, w);
         g3.smul_at(tstp, Complex::new(fac, 0.0));
     }
     g3
@@ -109,10 +109,10 @@ fn matrix_elements_grid(sign: Sign, nt: i64, ntau: i64, tmax: f64, beta: f64, dt
             convolution_ab(&mut tmp, &p1, &p2, &integ, beta, dt);
             // acc += tmp per step
             let f = timestep_at(&tmp, 0);
-            acc.incr_by_step(&f, MATSUBARA, Complex::ONE);
+            acc.incr_by_step(MATSUBARA, &f, Complex::ONE);
             for t in 0..=nt {
                 let f = timestep_at(&tmp, t);
-                acc.incr_by_step(&f, t, Complex::ONE);
+                acc.incr_by_step(t, &f, Complex::ONE);
             }
         }
         // write back into g3

@@ -371,7 +371,7 @@ fn incr_convolution_equals_c0_plus_alpha_conv() {
                     let mut exp = c0.clone();
                     for t in all_steps() {
                         let row = timestep_at(&cref, if t == MATSUBARA { 0 } else { t });
-                        exp.incr_by_step(&row, t, alpha);
+                        exp.incr_by_step(t, &row, alpha);
                     }
                     let mut x = c0.clone();
                     for t in all_steps() {
@@ -433,7 +433,7 @@ fn component_entries() {
             let mut exp = c0.clone();
             for t in all_steps() {
                 let row = timestep_at(&cref, if t == MATSUBARA { 0 } else { t });
-                exp.incr_by_step(&row, t, alpha);
+                exp.incr_by_step(t, &row, alpha);
             }
             // mat entry
             let mut x = c0.clone();

@@ -169,7 +169,7 @@ fn pseudo_traits() {
     assert!(pseudo_equals(&x, &a));
     // memcpy at step 2
     let mut y = PseudoGreen::new(&cc, Sign::Fermi, Complex::ZERO);
-    y.memcpy_step(&a, 2);
+    y.memcpy_step(2, &a);
     assert_eq!(a.distance_at(&y, 2), 0.0);
     assert!(a.distance_at(&y, 1) > 0.0);
     // memset and zeros
@@ -251,8 +251,8 @@ fn pseudo_multiplication_by_cf() {
     for t in MATSUBARA..=5 {
         let mut l = a.clone();
         let mut r = a.clone();
-        l.lmul_cf(&f, t);
-        r.rmul_cf(&f, t);
+        l.lmul_cf(t, &f);
+        r.rmul_cf(t, &f);
         if t == MATSUBARA {
             let f0 = f.block(MATSUBARA);
             for m in 0..=6i64 {
@@ -291,6 +291,10 @@ fn pseudo_multiplication_by_cf() {
                 }
             }
             assert!(l.distance_at(&r, t) > 0.0);
+            // row-scoped: a real-time step must leave the Matsubara
+            // component untouched (NESSi herm_pseudo::left/right_multiply)
+            assert_eq!(l.mat.raw(), a.mat.raw(), "lmul_cf touched mat at t={t}");
+            assert_eq!(r.mat.raw(), a.mat.raw(), "rmul_cf touched mat at t={t}");
         }
     }
 }

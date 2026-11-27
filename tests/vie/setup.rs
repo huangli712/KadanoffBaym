@@ -353,7 +353,7 @@ pub(crate) fn sin_reference(
         let gsm = DenseMat::from_vec(2, 2, gsing.block(i).to_vec());
         tf1.rmul_at(i, &gsm, Adjoint::No);
         let step = timestep_at(&tf1, i.max(0));
-        tq.incr_by_step(&step, i, c(-1.0, 0.0));
+        tq.incr_by_step(i, &step, c(-1.0, 0.0));
     }
     vie2_timestep(
         tstp,
