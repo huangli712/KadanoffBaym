@@ -29,24 +29,15 @@ pub enum DysonBathType {
 ///
 /// where ``\\Sigma_b`` is the bath self-energy, see `sigma_bath()`. The
 /// self-energy is transformed by the trapezoidal rule on a local copy, so
-/// `Sigma` is not changed. Only the central band
+/// `sigma` is not changed. Only the central band
 /// ``|m| < (N_{ft}/2-1)/3`` of the frequency modes is filled, all the other
 /// modes of `G` are set to zero. Finally `G` is transformed back to the time
 /// domain.
 ///
-/// ### Arguments
-/// * G         -> On return, the Green's function (both domains).
-/// * mu        -> Chemical potential.
-/// * H         -> Hamiltonian, a square matrix.
-/// * Sigma     -> Self-energy, the time data is the input.
-/// * method    -> Only `FftIntegralMethod::Trapez`.
-/// * bath_type -> Type of the bath, see `sigma_bath()`.
-/// * bath_eta  -> Bath coupling.
-/// * bath_beta -> Bath inverse temperature.
-/// * bath_mu   -> Bath chemical potential.
-///
-/// ### Returns
-/// * G -> The Green's function.
+/// The result is written into `g` (both domains). `method` must be
+/// `FftIntegralMethod::Trapez`; `bath_type` selects the bath (see
+/// [`sigma_bath`]) with the coupling `bath_eta`, the inverse temperature
+/// `bath_beta` and the chemical potential `bath_mu`.
 #[allow(clippy::too_many_arguments)]
 pub fn dyson_steady(
     g: &mut SteadyGreen,
@@ -130,10 +121,10 @@ pub fn dyson_steady(
 /// Retarded and lesser self-energy of the bath that regularizes the
 /// steady-state Dyson equation, at the frequency `omega`:
 ///
-/// * `BATH_NONE`  : ``\\Sigma^R = \\Sigma^< = 0``.
-/// * `BATH_CONST` : ``\\Sigma^R = -i\\eta``, ``\\Sigma^< = 2i\\eta f(\\omega-\\mu)``.
-/// * `BATH_GAUSS` : as `BATH_CONST`, multiplied by ``e^{-\\omega^2}``.
-/// * `BATH_OHMIC` : ``\\Sigma^R = -i\\eta\\omega e^{-\\omega^2}``, the lesser
+/// * `DysonBathType::None`  : ``\\Sigma^R = \\Sigma^< = 0``.
+/// * `DysonBathType::Const` : ``\\Sigma^R = -i\\eta``, ``\\Sigma^< = 2i\\eta f(\\omega-\\mu)``.
+/// * `DysonBathType::Gauss` : as `DysonBathType::Const`, multiplied by ``e^{-\\omega^2}``.
+/// * `DysonBathType::Ohmic` : ``\\Sigma^R = -i\\eta\\omega e^{-\\omega^2}``, the lesser
 ///   component uses the Bose factor of ``\\beta\\omega``, with the limit
 ///   ``-2i\\eta e^{-\\omega^2}/\\beta`` for ``|\\beta\\omega| < 10^{-6}``.
 ///
@@ -142,17 +133,9 @@ pub fn dyson_steady(
 /// from the left, so the factor is ``e^{-\\omega^2}`` and does not depend on
 /// `h`; `h` is only checked.
 ///
-/// ### Arguments
-/// * omega     -> Frequency ω.
-/// * h         -> Time step.
-/// * bath_type -> Type of the bath.
-/// * eta       -> Coupling η ≥ 0.
-/// * beta      -> Inverse temperature of the bath, β > 0.
-/// * mu        -> Chemical potential of the bath (not used by `BATH_OHMIC`).
-///
-/// ### Returns
-/// * ret -> Retarded self-energy, a C64.
-/// * les -> Lesser self-energy, a C64.
+/// Returns the retarded and the lesser self-energy. `eta` must be
+/// non-negative and `beta` positive; `mu` is not used by
+/// `DysonBathType::Ohmic`.
 pub fn sigma_bath(
     omega: f64,
     h: f64,
