@@ -21,7 +21,7 @@ pub use workspace::{MovingVie2Workspace, PseudoVie2Workspace, Vie2Workspace};
 
 pub use full::{vie2, vie2_timestep, vie2_timestep_ws};
 pub use mat::vie2_mat;
-pub use moving::vie2_timestep_moving;
+pub use moving::vie2_moving_timestep;
 pub use pseudo::{pseudo_vie2, pseudo_vie2_mat, pseudo_vie2_start, pseudo_vie2_timestep};
 pub use singular::vie2_timestep_singular;
 pub use start::vie2_start;
