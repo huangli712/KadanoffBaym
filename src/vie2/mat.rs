@@ -8,7 +8,8 @@ use crate::types::ContourGreen;
 use crate::weights::Integrator;
 
 use crate::base::{matsubara_cg, matsubara_fixpoint, matsubara_seed};
-use crate::vie2::full::{check_vie2, check_vie2_order};
+
+use crate::vie2::check::{check_vie2, check_vie2_order};
 
 ///
 /// *Remarks* : *Matsubara VIE2*
