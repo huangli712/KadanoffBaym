@@ -83,7 +83,7 @@ use crate::weights::Integrator;
 
 use crate::types::MATSUBARA;
 
-use crate::convolution::full::check_conv_shapes;
+use crate::convolution::check::{check_conv_shapes, check_mat_shapes};
 use crate::linalg::mul_acc;
 
 /// `C^M = A^M * B^M` over all imaginary time points, then scaled by `dtau`.
@@ -328,28 +328,6 @@ fn incr_convolution_mat_impl(
 /// Matsubara branch value `f(0^-)` of the contour function as a matrix.
 pub(crate) fn f0_matrix(cf: &TimeFunction) -> DenseMat {
     DenseMat::from_vec(cf.size1, cf.size2, cf.block(MATSUBARA).to_vec())
-}
-
-/// Shape contract of the Matsubara convolution `C = A * B`: one common
-/// Matsubara grid and the block shapes of a matrix product.
-fn check_mat_shapes(a: &MatComp, b: &MatComp, c: &MatComp) {
-    assert!(
-        a.ntau == b.ntau
-            && b.ntau == c.ntau
-            && a.size2 == b.size1
-            && c.size1 == a.size1
-            && c.size2 == b.size2,
-        "conv_mat: inconsistent shapes: A {}x{}, B {}x{}, C {}x{} (ntau {} / {} / {})",
-        a.size1,
-        a.size2,
-        b.size1,
-        b.size2,
-        c.size1,
-        c.size2,
-        a.ntau,
-        b.ntau,
-        c.ntau
-    );
 }
 
 #[cfg(test)]
