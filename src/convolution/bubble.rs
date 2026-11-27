@@ -114,9 +114,9 @@ pub fn bubble1(
         let ntau = c.ntau as i64;
         let sig = -(b.sign.as_i64() as f64);
         for m in 0..=ntau {
-            let am = at(a.mat.block(a.mat.check_tau(m)), a.size2, a1, a2);
-            let bm = at(b.mat.block(b.mat.check_tau(ntau - m)), b.size2, b2, b1);
-            put(
+            let am = block_elem(a.mat.block(a.mat.check_tau(m)), a.size2, a1, a2);
+            let bm = block_elem(b.mat.block(b.mat.check_tau(ntau - m)), b.size2, b2, b1);
+            set_block_elem(
                 c.mat.block_mut(c.mat.check_tau(m)),
                 c.size2,
                 c1,
@@ -136,40 +136,40 @@ pub fn bubble1(
             let acc_les = acc.less.block(acc.less.idx(m, tstp));
             let a_les = a.less.block(a.less.idx(m, tstp));
             let a_ret = a.ret.block(a.ret.idx(tstp, m));
-            let bles21_tt1 = -at(bcc_les, bcc.size2, b1, b2).conj();
-            let bgtr21_tt1 = at(b_ret, b.size2, b2, b1) + bles21_tt1;
-            let bles21_t1t = at(b_les, b.size2, b2, b1);
-            let bgtr21_t1t = -at(bcc_ret, bcc.size2, b1, b2).conj() + bles21_t1t;
-            let ales12_tt1 = -at(acc_les, acc.size2, a2, a1).conj();
-            let agtr12_tt1 = at(a_ret, a.size2, a1, a2) + ales12_tt1;
+            let bles21_tt1 = -block_elem(bcc_les, bcc.size2, b1, b2).conj();
+            let bgtr21_tt1 = block_elem(b_ret, b.size2, b2, b1) + bles21_tt1;
+            let bles21_t1t = block_elem(b_les, b.size2, b2, b1);
+            let bgtr21_t1t = -block_elem(bcc_ret, bcc.size2, b1, b2).conj() + bles21_t1t;
+            let ales12_tt1 = -block_elem(acc_les, acc.size2, a2, a1).conj();
+            let agtr12_tt1 = block_elem(a_ret, a.size2, a1, a2) + ales12_tt1;
             let cgtr_tt1 = i_c * agtr12_tt1 * bles21_t1t;
             let cles_tt1 = i_c * ales12_tt1 * bgtr21_t1t;
-            put(
+            set_block_elem(
                 c.ret.block_mut(c.ret.idx(tstp, m)),
                 c.size2,
                 c1,
                 c2,
                 cgtr_tt1 - cles_tt1,
             );
-            put(
+            set_block_elem(
                 c.less.block_mut(c.less.idx(m, tstp)),
                 c.size2,
                 c1,
                 c2,
-                i_c * at(a_les, a.size2, a1, a2) * bgtr21_tt1,
+                i_c * block_elem(a_les, a.size2, a1, a2) * bgtr21_tt1,
             );
         }
         for m in 0..=ntau {
             let bvt21 = msigb
-                * at(
+                * block_elem(
                     bcc.lmix.block(bcc.lmix.idx(tstp, ntau - m)),
                     bcc.size2,
                     b1,
                     b2,
                 )
                 .conj();
-            let avt = at(a.lmix.block(a.lmix.idx(tstp, m)), a.size2, a1, a2);
-            put(
+            let avt = block_elem(a.lmix.block(a.lmix.idx(tstp, m)), a.size2, a1, a2);
+            set_block_elem(
                 c.lmix.block_mut(c.lmix.idx(tstp, m)),
                 c.size2,
                 c1,
@@ -227,9 +227,9 @@ pub fn bubble2(
     if tstp == MATSUBARA {
         let ntau = c.ntau as i64;
         for m in 0..=ntau {
-            let am = at(a.mat.block(a.mat.check_tau(m)), a.size2, a1, a2);
-            let bm = at(b.mat.block(b.mat.check_tau(m)), b.size2, b1, b2);
-            put(
+            let am = block_elem(a.mat.block(a.mat.check_tau(m)), a.size2, a1, a2);
+            let bm = block_elem(b.mat.block(b.mat.check_tau(m)), b.size2, b1, b2);
+            set_block_elem(
                 c.mat.block_mut(c.mat.check_tau(m)),
                 c.size2,
                 c1,
@@ -247,31 +247,31 @@ pub fn bubble2(
             let b_les = b.less.block(b.less.idx(m, tstp));
             let a_ret = a.ret.block(a.ret.idx(tstp, m));
             let b_ret = b.ret.block(b.ret.idx(tstp, m));
-            let accles21 = at(acc_les, acc.size2, a2, a1);
-            let bccles21 = at(bcc_les, bcc.size2, b2, b1);
-            let bgtr12_tt1 = at(b_ret, b.size2, b1, b2) - bccles21.conj();
-            let agtr12_tt1 = at(a_ret, a.size2, a1, a2) - accles21.conj();
+            let accles21 = block_elem(acc_les, acc.size2, a2, a1);
+            let bccles21 = block_elem(bcc_les, bcc.size2, b2, b1);
+            let bgtr12_tt1 = block_elem(b_ret, b.size2, b1, b2) - bccles21.conj();
+            let agtr12_tt1 = block_elem(a_ret, a.size2, a1, a2) - accles21.conj();
             let cgtr_tt1 = i_c * agtr12_tt1 * bgtr12_tt1;
             let cles_tt1 = i_c * accles21.conj() * bccles21.conj();
-            put(
+            set_block_elem(
                 c.ret.block_mut(c.ret.idx(tstp, m)),
                 c.size2,
                 c1,
                 c2,
                 cgtr_tt1 - cles_tt1,
             );
-            put(
+            set_block_elem(
                 c.less.block_mut(c.less.idx(m, tstp)),
                 c.size2,
                 c1,
                 c2,
-                i_c * at(a_les, a.size2, a1, a2) * at(b_les, b.size2, b1, b2),
+                i_c * block_elem(a_les, a.size2, a1, a2) * block_elem(b_les, b.size2, b1, b2),
             );
         }
         for m in 0..=ntau {
-            let avt = at(a.lmix.block(a.lmix.idx(tstp, m)), a.size2, a1, a2);
-            let bvt = at(b.lmix.block(b.lmix.idx(tstp, m)), b.size2, b1, b2);
-            put(
+            let avt = block_elem(a.lmix.block(a.lmix.idx(tstp, m)), a.size2, a1, a2);
+            let bvt = block_elem(b.lmix.block(b.lmix.idx(tstp, m)), b.size2, b1, b2);
+            set_block_elem(
                 c.lmix.block_mut(c.lmix.idx(tstp, m)),
                 c.size2,
                 c1,
@@ -564,20 +564,21 @@ pub fn bubble2_steady_scalar(c: &mut SteadyGreen, a: &SteadyGreen, b: &SteadyGre
     bubble_steady(c, 0, 0, a, 0, 0, b, 0, 0, 1);
 }
 
-// The `ℱᵐᵒᵛ` overloads. The orbital indices are 0-based. The alias
-// checks are subsumed by the Rust borrow checker.
+// Block element access. The bubble loops take each block once and index
+// it directly: the orbital indices (0-based) have been validated by
+// `check_bubble_orbital`, and aliasing of `C` with an input is rejected
+// by `check_bubble`.
 
-/// Element `(a, b)` of a stored block with `cols` columns, and the write
-/// of it: the bubble loops take each block once and index it directly,
-/// the orbital indices having been validated by `check_bubble_orbital`.
+/// Element `(i, j)` of a row-major block with `cols` columns.
 #[inline]
-fn at(block: &[Complex], cols: usize, a: usize, b: usize) -> Complex {
-    block[a * cols + b]
+fn block_elem(block: &[Complex], cols: usize, i: usize, j: usize) -> Complex {
+    block[i * cols + j]
 }
 
+/// Write element `(i, j)` of a row-major block with `cols` columns.
 #[inline]
-fn put(block: &mut [Complex], cols: usize, a: usize, b: usize, v: Complex) {
-    block[a * cols + b] = v;
+fn set_block_elem(block: &mut [Complex], cols: usize, i: usize, j: usize, v: Complex) {
+    block[i * cols + j] = v;
 }
 
 #[cfg(test)]
