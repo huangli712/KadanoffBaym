@@ -14,11 +14,11 @@ use kadanoffbaym::math::MovingStageWorkspace;
 use kadanoffbaym::types::{MovingGreen, MovingTimeFunction, SteadyGreen, SteadyGrid};
 use kadanoffbaym::weights::Integrator;
 
-use kadanoffbaym::dyson::dyson_timestep_moving;
+use kadanoffbaym::dyson::dyson_moving_timestep;
 use kadanoffbaym::fourier::downsample;
 use kadanoffbaym::math::extrapolate_timestep_moving;
 use kadanoffbaym::variants::{
-    copy_timestep, distance_moving, forward, incr_step, init_from_function, init_from_steady,
+    copy_timestep, forward, incr_step, init_from_function, init_from_steady, moving_distance,
 };
 
 use super::steady_state::SteadyStateResult;
@@ -136,15 +136,15 @@ pub(crate) fn run_steady_truncated(cfgfile: &str) -> Result<(), String> {
         for _ in 0..=ncorr {
             let gtmp = copy_timestep(&g, 0);
             if ipt != 0 {
-                dyson_timestep_moving(n, &mut gw, mu, &eloc, &g, h, &integ, &mut mws);
+                dyson_moving_timestep(n, &mut gw, mu, &eloc, &g, h, &integ, &mut mws);
             } else {
                 g.ret.mrow_mut(0).copy_from_slice(gw.ret.mrow(0));
                 g.less.mrow_mut(0).copy_from_slice(gw.less.mrow(0));
             }
             update_selfenergy(&mut sigma, &gw, &mut w, &uf);
             update_kernel(&mut kk, &sigma, &g);
-            dyson_timestep_moving(n, &mut g, mu, &eloc, &kk, h, &integ, &mut mws);
-            err = distance_moving(&copy_timestep(&g, 0), &gtmp);
+            dyson_moving_timestep(n, &mut g, mu, &eloc, &kk, h, &integ, &mut mws);
+            err = moving_distance(&copy_timestep(&g, 0), &gtmp);
         }
         steps.push(TruncStep {
             rel,
