@@ -36,4 +36,4 @@ pub use timestep::GreenTimeStep;
 
 pub use layout::MATSUBARA;
 
-pub(crate) use layout::{adjoint_block_into, triangular_row_offset};
+pub(crate) use layout::{adjoint_block_into, neg_adjoint_block_into, triangular_row_offset};
