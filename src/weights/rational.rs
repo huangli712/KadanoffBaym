@@ -33,6 +33,10 @@ impl Rational {
         Rational { num: n, den: 1 }
     }
 
+    pub(super) fn to_f64(self) -> f64 {
+        self.num as f64 / self.den as f64
+    }
+
     pub(super) fn add(self, o: Rational) -> Rational {
         Rational::new(self.num * o.den + o.num * self.den, self.den * o.den)
     }
@@ -45,11 +49,7 @@ impl Rational {
         Rational::new(self.num * o.den, self.den * o.num)
     }
 
-    pub(super) fn to_f64(self) -> f64 {
-        self.num as f64 / self.den as f64
-    }
-
-    fn gcd(a: i128, b: i128) -> i128 {
+    pub(super) fn gcd(a: i128, b: i128) -> i128 {
         if b == 0 { a } else { Self::gcd(b, a % b) }
     }
 }
