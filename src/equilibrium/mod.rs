@@ -12,9 +12,9 @@ mod pole;
 mod steady;
 
 pub use dos::{from_dos, from_dos_mat};
-pub use ham::{from_ham, from_ham_cf};
+pub use ham::{from_ham, from_ham_cf, from_ham_mat};
 pub use mat::{from_mat, from_mat_k};
 pub use pole::green_single_pole;
 pub use steady::{equilibrate_lesser, from_dos_steady};
 
-pub(crate) use ham::{check_hamiltonian, fill_matsubara, minus_mu};
+pub(crate) use ham::check_hamiltonian;
