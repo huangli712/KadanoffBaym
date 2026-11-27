@@ -23,7 +23,7 @@ pub use workspace::{DysonWorkspace, MovingDysonWorkspace, PseudoDysonWorkspace};
 
 pub use full::{dyson, dyson_timestep, dyson_timestep_ws};
 pub use mat::{dyson_mat, dyson_mat_cg, dyson_mat_fixpoint, dyson_mat_kernel, free_mat};
-pub use moving::dyson_timestep_moving;
+pub use moving::dyson_moving_timestep;
 pub use pseudo::{pseudo_dyson, pseudo_dyson_mat, pseudo_dyson_start, pseudo_dyson_timestep};
 pub use start::{dyson_start, dyson_start_lmix, dyson_start_ret};
 pub use steady::{dyson_steady, sigma_bath};
