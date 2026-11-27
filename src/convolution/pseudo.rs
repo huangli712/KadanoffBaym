@@ -535,7 +535,7 @@ pub fn pseudo_convolution_mat(
 /// Calculate the pseudo-particle convolution `C = A * f * B` at time
 /// step `tstp`.
 #[allow(clippy::too_many_arguments)]
-pub fn pseudo_convolution_time_step(
+pub fn pseudo_convolution_timestep(
     tstp: i64,
     c: &mut PseudoGreen,
     a: &PseudoGreen,
