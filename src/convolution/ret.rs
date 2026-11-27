@@ -73,7 +73,7 @@ use crate::types::{ContourGreen, GreenTimeStep, RetComp, TimeFunction};
 use crate::weights::Integrator;
 
 use crate::convolution::a_times_f;
-use crate::convolution::full::check_conv_args;
+use crate::convolution::check::check_conv_args;
 use crate::linalg::{mul_acc_c, mul_acc_cd};
 use crate::types::{adjoint_block_into, triangular_row_offset};
 
@@ -103,7 +103,7 @@ fn conv_ret_kernel(
     let mut adjbuf = vec![Complex::ZERO; bcc.size1 * bcc.size2];
 
     if n >= k {
-        if s1 == 1 && s2a == 1 && s2b == 1 {
+        if s1 == 1 && s2a == 1 && s2b == 1 && bcc.size1 == 1 && bcc.size2 == 1 {
             conv_ret_kernel_d1(tgt, n, a, f, b, bcc, integ, s, ws, lo, hi);
             return;
         }
