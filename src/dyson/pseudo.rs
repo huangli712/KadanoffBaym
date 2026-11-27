@@ -63,9 +63,9 @@ use crate::linalg::{solve_block_right, solve_block_right_single};
 
 use crate::dyson::workspace::PseudoDysonWorkspace;
 
+use crate::dyson::check::{check_pseudo_dyson, check_pseudo_dyson_args};
 use crate::dyson::timestep::{dyson_timestep_less_ws, dyson_timestep_ret_ws};
 use crate::dyson::{dyson_start_less, dyson_start_ret};
-use crate::equilibrium::check_hamiltonian;
 
 /// Solve the pseudo-particle Dyson equation at the Matsubara axis and
 /// at all the real time steps.
@@ -110,7 +110,7 @@ pub fn pseudo_dyson_mat(
     integ: &Integrator,
     beta: f64,
 ) {
-    check_pseudo_dyson_common(g, sigma, integ);
+    check_pseudo_dyson_args(g, sigma, integ);
     assert_eq!(h0.nrows(), g.size1, "H0 has a wrong matrix size");
     assert!(beta > 0.0, "beta must be positive");
     let mut gc = g.to_contour();
@@ -522,68 +522,6 @@ fn pseudo_dyson_timestep_impl(
     dyson_timestep_ret_ws(tstp, g, lambda0, h, sigma, hstep, integ, &mut pws.dw);
     pseudo_dyson_lmix_impl(tstp, g, lambda0, h0, sigma, integ, beta, hstep, pws);
     dyson_timestep_less_ws(tstp, g, lambda0, h, sigma, beta, hstep, integ, &mut pws.dw);
-}
-
-/// Check the arguments of the pseudo-particle Dyson solvers.
-fn check_pseudo_dyson(
-    g: &PseudoGreen,
-    sigma: &PseudoGreen,
-    h: &TimeFunction,
-    integ: &Integrator,
-    nmax: i64,
-) {
-    check_pseudo_dyson_common(g, sigma, integ);
-    if nmax >= 0 {
-        assert!(
-            g.nt as i64 >= nmax,
-            "G must have at least {} real time steps",
-            nmax + 1
-        );
-        assert!(
-            h.nt as i64 >= nmax,
-            "H must have at least {} real time steps",
-            nmax + 1
-        );
-    }
-    let d = g.size1;
-    // Hamiltonian checks over the needed steps (the
-    // Matsubara axis and 0..nmax), including the hermiticity check
-    let tstps: Vec<i64> = if nmax >= 0 {
-        (MATSUBARA..=nmax).collect()
-    } else {
-        vec![MATSUBARA]
-    };
-    check_hamiltonian(h, tstps.into_iter(), d);
-}
-
-/// The shared part of `_check_pseudo_dyson` (no Hamiltonian checks).
-fn check_pseudo_dyson_common(g: &PseudoGreen, sigma: &PseudoGreen, integ: &Integrator) {
-    assert!(
-        (1..=5).contains(&integ.k),
-        "the order must be in 1..=5, got {}",
-        integ.k
-    );
-    assert!(
-        g.sign == sigma.sign,
-        "G and Sigma must have the same statistics"
-    );
-    assert!(g.size1 == g.size2, "G must be square");
-    assert!(
-        sigma.size1 == g.size1 && sigma.size2 == g.size2,
-        "G and Sigma have different sizes"
-    );
-    assert!(
-        g.ntau == sigma.ntau,
-        "G and Sigma have different imaginary time grids"
-    );
-    assert!(
-        g.nt == sigma.nt,
-        "G and Sigma have different real time grids"
-    );
-    assert!(
-        g.ntau as i64 > integ.k,
-        "ntau must be larger than solve_order + 1"
-    );
 }
 
 #[cfg(test)]
