@@ -138,11 +138,8 @@ pub fn get_omega(m: i64, beta: f64, sign: Sign) -> f64 {
 /// blocks, such that `G(tau) + c_0(tau)` is continuous: `-a_0 / 2` for
 /// fermions, `a_0 (tau/beta - 1/2)` for bosons. `coeff` is not changed.
 ///
-/// ### Arguments
-/// * blocks -> On return, the tail correction `c_0(tau_r)`.
-/// * coeff  -> Jump coefficient `a_0`.
-/// * beta   -> Inverse temperature.
-/// * sign   -> FERMI or BOSE.
+/// The correction is written into `blocks`; `coeff` is the jump
+/// coefficient `a_0`.
 pub(crate) fn first_order_tail(
     blocks: &mut [Vec<Complex>],
     coeff: &[Complex],
@@ -174,12 +171,8 @@ pub(crate) fn first_order_tail(
 /// where ``m = 0, \\cdots, N`` and ``N = ntau - 1`` is the number of
 /// imaginary time intervals. The result has `N + 1` blocks.
 ///
-/// ### Arguments
-/// * a    -> Matsubara function.
-/// * sign -> FERMI or BOSE.
-///
-/// ### Returns
-/// * mdft -> mdft[:,:,m+1] is the transform for frequency index m.
+/// The element `m` of the result is the transform for the frequency index
+/// `m`.
 pub fn matsubara_dft(a: &MatComp, sign: Sign) -> Vec<Vec<Complex>> {
     let n = a.ntau as i64;
     let one = if sign == Sign::Fermi { 1 } else { 0 };
