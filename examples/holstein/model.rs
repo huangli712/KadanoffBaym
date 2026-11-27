@@ -10,7 +10,7 @@ use kadanoffbaym::linalg::Adjoint;
 use kadanoffbaym::vie2::Vie2Workspace;
 use kadanoffbaym::weights::Integrator;
 
-use kadanoffbaym::convolution::{bubble1, bubble2, conv_mat, convolution_time_step};
+use kadanoffbaym::convolution::{bubble1, bubble2, conv_mat, convolution_timestep};
 use kadanoffbaym::equilibrium::green_single_pole;
 use kadanoffbaym::vie2::{vie2_mat, vie2_start, vie2_timestep, vie2_timestep_ws};
 
@@ -175,7 +175,7 @@ fn convolve_step(
     ws: &mut ConvWorkspace,
 ) {
     zero_green_step(c, matsubara_step(n));
-    convolution_time_step(
+    convolution_timestep(
         matsubara_step(n),
         c,
         a,
