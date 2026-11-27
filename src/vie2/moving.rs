@@ -3,8 +3,8 @@
 // Purpose : the truncated (moving) VIE2 at one time step
 //
 // The kernels act on the window-absolute steps `(a, b)` through the
-// `_wret` / `_wles` accessors: `_wret(X, a, b)` is the block
-// `X^{R}(t_a, t_b)` inside the window, the leading row is `a = tc`.
+// `wret` / `wles` accessors: `wret(x, a, b)` is the block
+// `x^{R}(t_a, t_b)` inside the window, the leading row is `a = tc`.
 
 //!
 //! *Remarks* : *Truncated VIE2*
