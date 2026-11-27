@@ -56,7 +56,8 @@ use crate::types::MATSUBARA;
 
 use crate::linalg::mat_inv;
 use crate::storage::timestep_at;
-use crate::vie2::full::check_vie2;
+
+use crate::vie2::check::check_vie2;
 use crate::vie2::vie2_timestep;
 
 /// Reusable workspace of [`vie2_timestep_singular`]: it keeps the transformed
@@ -285,5 +286,5 @@ fn vie2_singular_transform(
     // Q' = D^{-1} Q - F' Gsing: F' is RIGHT-multiplied by Gsing
     ws.fg.rmul_at(i, &gsing_m, Adjoint::No);
     let fg_step = timestep_at(&ws.fg, i.max(0));
-    ws.q.incr_by_step(&fg_step, i, -Complex::ONE);
+    ws.q.incr_by_step(i, &fg_step, -Complex::ONE);
 }
