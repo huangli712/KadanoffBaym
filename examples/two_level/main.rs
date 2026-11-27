@@ -18,7 +18,7 @@ use kadanoffbaym::dyson::DysonWorkspace;
 use kadanoffbaym::vie2::Vie2Workspace;
 use kadanoffbaym::weights::Integrator;
 
-use kadanoffbaym::convolution::{conv_mat, convolution_time_step};
+use kadanoffbaym::convolution::{conv_mat, convolution_timestep};
 use kadanoffbaym::dyson::{dyson_mat, dyson_start, dyson_timestep_ws};
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::vie2::{vie2_mat, vie2_start, vie2_timestep_ws};
@@ -237,7 +237,7 @@ pub(crate) fn run_nonequilibrium(cfgfile: &str, outfile: &str) -> Result<(), Str
             conv_mat(&mut f.mat, &g0.mat, &sigma.mat, &integ, beta, Sign::Fermi);
             conv_mat(&mut fcc.mat, &sigma.mat, &g0.mat, &integ, beta, Sign::Fermi);
         } else {
-            convolution_time_step(
+            convolution_timestep(
                 matsubara_step(tstp),
                 f,
                 &g0,
@@ -250,7 +250,7 @@ pub(crate) fn run_nonequilibrium(cfgfile: &str, outfile: &str) -> Result<(), Str
                 h,
                 Some(ws),
             );
-            convolution_time_step(
+            convolution_timestep(
                 matsubara_step(tstp),
                 fcc,
                 &sigma,
