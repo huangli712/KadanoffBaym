@@ -102,7 +102,7 @@ pub fn rmul_step(x: &mut MovingGreenTimeStep, f: &MovingTimeFunction, adj: bool)
 
 /// Distance between two moving time steps: the sum of the Frobenius
 /// norms of the block differences of both components.
-pub fn distance_moving(x: &MovingGreenTimeStep, y: &MovingGreenTimeStep) -> f64 {
+pub fn moving_distance(x: &MovingGreenTimeStep, y: &MovingGreenTimeStep) -> f64 {
     assert!(
         x.tc == y.tc && x.ret.size1 == y.ret.size1 && x.ret.size2 == y.ret.size2,
         "the cut-offs or matrix sizes differ"
@@ -119,7 +119,7 @@ pub fn distance_moving(x: &MovingGreenTimeStep, y: &MovingGreenTimeStep) -> f64 
 
 /// Distance between the rows of the absolute time step `tstp` of two
 /// moving Green's functions.
-pub fn distance_moving_at(g1: &MovingGreen, g2: &MovingGreen, tstp: i64) -> f64 {
+pub fn moving_distance_at(g1: &MovingGreen, g2: &MovingGreen, tstp: i64) -> f64 {
     assert!(
         g1.is_initialized() && g2.is_initialized(),
         "the moving object is not initialized"
@@ -128,7 +128,7 @@ pub fn distance_moving_at(g1: &MovingGreen, g2: &MovingGreen, tstp: i64) -> f64 
     let d2 = g2.tstp - tstp;
     assert!(
         0 <= d1 && d1 <= g1.tc && 0 <= d2 && d2 <= g2.tc,
-        "distance_moving_at: tstp {tstp} outside the windows"
+        "moving_distance_at: tstp {tstp} outside the windows"
     );
     let b = g1.ret.size1 * g1.ret.size2;
     let mut err = 0.0;
