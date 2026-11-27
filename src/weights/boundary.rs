@@ -1,55 +1,12 @@
 // Project : KadanoffBaym
 // File    : src/weights/boundary.rs
-// Purpose : boundary convolution weight calculators: the analytic
-//           R integral and the rcorr-style tables :
+// Purpose : boundary convolution weights: the analytic `R` integral,
+//           the rcorr-style table, and the exact `i128` fraction to `f64`
+//           rounding the table needs (its operands exceed `2^53`)
 
 use crate::weights::poly;
 use crate::weights::rational::Rational;
 
-///
-/// *Remarks* : ``\mathbf{R}`` *Integral*
-///
-/// In order to evaluate the following integration analytically
-///
-/// ```math
-/// \begin{equation}
-/// \mathbf{R} = \int^{m}_0 dx\ (m-x)^a x^b,
-/// \end{equation}
-/// ```
-///
-/// we execute the following python codes:
-///
-/// ```text
-/// import sympy
-/// x, a, b, m = sympy.symbols('x a b m')
-/// c = sympy.integrate((m-x)**a*x**b,(x,0,m))
-/// c = sympy.simplify(c)
-/// sympy.pprint(c)
-/// ```
-///
-/// The output is as follows:
-///
-/// ```math
-/// \begin{equation}
-/// \mathbf{R} = \frac{m^{a+b+1}\Gamma(a+1)\Gamma(b+1)}{\Gamma(a+b+2)},
-/// \end{equation}
-/// ```
-///
-/// where ``\Gamma`` is a special function.
-///
-/// *Remarks* : ``\Gamma`` *Function*
-///
-/// The definition for the ``\Gamma`` function is as follows:
-///
-/// ```math
-/// \begin{equation}
-/// \Gamma(z) = \int^{\infty}_0 e^{-t} t^{z - 1} dt,
-/// \end{equation}
-/// ```
-///
-/// where ``z = x + iy`` and 𝑥 > 0.
-///
-///
 /// Boundary convolution weights `Wc[m-1][i][j]` for `m = 1..k-1`,
 /// row-major `(k-1) * (k+1) * (k+1)`; empty for `k = 1`:
 /// `Wc[m][i][j] = sum_{a,b} Wi[a][i] Wi[b][j] R(m, a, b)` with the analytic
@@ -61,30 +18,43 @@ use crate::weights::rational::Rational;
 ///            = \frac{m^{a+b+1} a!\, b!}{(a+b+1)!},
 /// ```
 ///
-/// where the Gamma functions of the analytic result are replaced by
-/// factorials: `a` and `b` are non-negative integers (the loop indices), so
-/// `Gamma(a+1) = a!`, `Gamma(b+1) = b!`, and `Gamma(a+b+2) = (a+b+1)!`.
+/// (the sympy result of `integrate((m-x)**a*x**b, (x, 0, m))`, with the
+/// Gamma functions replaced by factorials: `a` and `b` are non-negative
+/// integers, the loop indices, so `Gamma(a+1) = a!`, `Gamma(b+1) = b!`,
+/// and `Gamma(a+b+2) = (a+b+1)!`).
+///
 /// The sum is exact: every term is reduced, the numerators are accumulated
 /// over the least common multiple of the denominators (the largest
 /// intermediate integer is `1.7e23` at `k = 10`, well within `i128`), and
-/// the fraction is converted with a single rounding.
+/// the fraction is converted with a single rounding by [`ratio_to_f64`].
 pub(super) fn calc_boundary_convolution(k: i64) -> Vec<f64> {
     let n = (k + 1) as usize;
     let wi = poly::vandermonde_inverse(n);
     let m_dim = (k - 1) as usize;
     let mut wc = vec![0.0f64; m_dim * n * n];
-    let fact = |x: usize| (1..=x as i128).product::<i128>();
+    // 0!, 1!, ..., (2n-1)!: the largest argument is (n-1) + (n-1) + 1
+    let mut fact = vec![1i128; 2 * n];
+    for x in 1..2 * n {
+        fact[x] = fact[x - 1] * x as i128;
+    }
     for m in 1..=(k - 1) {
+        // R(m, a, b) depends on (m, a, b) only, not on (i, j)
+        let mut r_table = Vec::with_capacity(n * n);
+        for a in 0..n {
+            for b in 0..n {
+                r_table.push(Rational::new(
+                    (m as i128).pow((a + b + 1) as u32) * fact[a] * fact[b],
+                    fact[a + b + 1],
+                ));
+            }
+        }
         for i in 0..n {
             for j in 0..n {
                 // the exact sum, kept as a fraction with a common denominator
                 let (mut num, mut den) = (0i128, 1i128);
                 for a in 0..n {
                     for b in 0..n {
-                        let r = Rational::new(
-                            (m as i128).pow((a + b + 1) as u32) * fact(a) * fact(b),
-                            fact(a + b + 1),
-                        );
+                        let r = &r_table[a * n + b];
                         let (x, y) = (&wi[a * n + i], &wi[b * n + j]);
                         let t = Rational::new(x.num * y.num * r.num, x.den * y.den * r.den);
                         // t.den > 0: bring both fractions to the least common denominator
