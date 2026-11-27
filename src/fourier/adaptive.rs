@@ -27,15 +27,7 @@ pub(crate) struct Panels {
 /// must be even and larger than 16. The error estimate is the difference to
 /// the result obtained with every second point.
 ///
-/// ### Arguments
-/// * omega  -> Frequency ω.
-/// * a      -> Lower bound.
-/// * b      -> Upper bound.
-/// * values -> Function values at the `N + 1` points.
-///
-/// ### Returns
-/// * res -> Fourier integral, a C64.
-/// * err -> Error estimate, a C64.
+/// Returns the integral and its error estimate.
 pub fn dft_cplx(omega: f64, a: f64, b: f64, values: &[Complex]) -> (Complex, Complex) {
     let n = values.len() - 1;
     assert!(
@@ -156,20 +148,10 @@ pub(crate) fn adft_eval(p: &Panels, w: f64) -> (Complex, Complex) {
 /// is split. Each panel contains `n` subintervals. Since `dft_cplx()`
 /// requires more than 16 subintervals, `n` must be even and ≥ 18 in
 /// practice (`n = 16` passes the check of the sampler but is rejected by the
-/// corrected DFT). There is no default for `n`; the default `n = 18` is the
+/// corrected DFT). `n = 18` is the
 /// smallest executable value.
 ///
-/// ### Arguments
-/// * f     -> Function, f(t) returns a number.
-/// * omega -> Frequency ω.
-/// * a     -> Lower bound.
-/// * b     -> Upper bound.
-/// * n     -> Number of subintervals of each panel.
-/// * limit -> Budget of the panels.
-///
-/// ### Returns
-/// * res -> Fourier integral, a C64.
-/// * err -> Error estimate, a C64.
+/// Returns the integral and its error estimate.
 pub fn adft_func(
     f: impl Fn(f64) -> f64,
     omega: f64,
