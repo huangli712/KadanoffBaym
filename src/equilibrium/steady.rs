@@ -120,19 +120,10 @@ fn retarded_component_adaptive(
 ///   integral on `[lo, hi]` with `nn` subintervals per panel and the panel
 ///   budget `limit`. The frequency data is not changed.
 ///
-/// ### Arguments
-/// * G      -> On return, the Green's function.
-/// * sign   -> FERMI or BOSE.
-/// * dos    -> Density of states.
-/// * beta   -> Inverse temperature.
-/// * mu     -> Chemical potential.
-/// * method -> `FftIntegralMethod::Trapez` or `FftIntegralMethod::Adaptive`.
-/// * lo, hi -> Integration window of `FftIntegralMethod::Adaptive`.
-/// * limit  -> Panel budget of `FftIntegralMethod::Adaptive`.
-/// * nn     -> Subintervals per panel of `FftIntegralMethod::Adaptive`, even and > 16.
-///
-/// ### Returns
-/// * G -> The Green's function.
+/// The result is written into `g`. With `FftIntegralMethod::Adaptive`,
+/// `lo` and `hi` must be given and bound the integration window, `nn`
+/// (even and larger than 16) is the number of subintervals per panel and
+/// `limit` the panel budget.
 #[allow(clippy::too_many_arguments)]
 pub fn from_dos_steady(
     g: &mut SteadyGreen,
@@ -233,15 +224,6 @@ pub fn from_dos_steady(
 /// neighbouring modes agree (relative tolerance ``10^{-6}``), the limit
 /// ``A'(\\mu)/\\beta`` of ``A n_B`` is used with the averaged slope; otherwise
 /// the function panics.
-///
-/// ### Arguments
-/// * G    -> Green's function, the retarded time data is the input.
-/// * sign -> FERMI or BOSE.
-/// * beta -> Inverse temperature.
-/// * mu   -> Chemical potential.
-///
-/// ### Returns
-/// * G -> The Green's function.
 pub fn equilibrate_lesser(g: &mut SteadyGreen, sign: Sign, beta: f64, mu: f64) {
     assert!(beta > 0.0, "beta must be positive, got {beta}");
     let grid = g.grid;
