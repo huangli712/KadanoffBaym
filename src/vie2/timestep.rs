@@ -1,17 +1,15 @@
 // Project : KadanoffBaym
 // File    : src/vie2/timestep.rs
-// Purpose : time stepping of the real time VIE2 components
+// Purpose : time stepping of the real time VIE2 components: the
+//           per-component kernels (the public drivers live in full.rs)
 //
 // All time indices are 0-based real times.
 
-use crate::base::MatsubaraMethod;
 use crate::complex::Complex;
 use crate::convolution::FOp;
 use crate::linalg::{BlockSolver, DenseMat};
 use crate::types::ContourGreen;
 use crate::weights::Integrator;
-
-use crate::types::MATSUBARA;
 
 use crate::convolution::incr_convolution_lmix_step;
 use crate::convolution::{incr_less_adv_buf, incr_lmix_rmix_buf};
@@ -22,75 +20,6 @@ use crate::linalg::{solve_block_right, solve_block_right_single};
 use crate::types::{adjoint_block_into, triangular_row_offset};
 
 use crate::vie2::workspace::Vie2Workspace;
-
-use crate::vie2::full::{check_vie2, check_vie2_order};
-use crate::vie2::start::vie2_bootstrap;
-use crate::vie2::{vie2_mat, vie2_start};
-
-/// Solve the VIE2 at the time step `tstp`:
-///
-/// * `MATSUBARA` -> the Matsubara component (`vie2_mat`)
-/// * `0` -> the zeroth order start-up at `t = 0`
-/// * `1 <= tstp <= k` -> the start-up of order `tstp`, i.e. the time
-///   steps `0, .., tstp` are (re)calculated
-/// * `tstp >= k + 1` -> the time stepping; the previous time steps must
-///   be known
-#[allow(clippy::too_many_arguments)]
-pub fn vie2_timestep(
-    tstp: i64,
-    g: &mut ContourGreen,
-    f: &ContourGreen,
-    fcc: &ContourGreen,
-    q: &ContourGreen,
-    integ: &Integrator,
-    beta: f64,
-    h: f64,
-    method: MatsubaraMethod,
-) {
-    check_vie2(g, f, fcc, q);
-    check_vie2_order(integ);
-    assert!(
-        MATSUBARA <= tstp && tstp <= g.nt as i64,
-        "time step {tstp} out of range"
-    );
-    assert!(beta > 0.0, "beta must be positive");
-    assert!(h > 0.0, "h must be positive");
-    let k = integ.k;
-
-    if tstp == MATSUBARA {
-        vie2_mat(g, f, fcc, q, beta, integ, method, 6, 40, 1e-12);
-    } else if tstp == 0 {
-        vie2_bootstrap(g, f, q, beta);
-    } else if tstp <= k {
-        vie2_start(g, f, fcc, q, tstp, beta, h);
-    } else {
-        let mut ws = Vie2Workspace::new(integ.k, g.size1, g.ntau);
-        vie2_timestep_ws(tstp, g, f, fcc, q, integ, beta, h, &mut ws);
-    }
-}
-
-/// Workspace-reusing VIE2 time stepping (the `tstp > k` branch of
-/// [`vie2_timestep`]): pass one [`Vie2Workspace`] built before the
-/// time-step loop. Reuse is valid while the kernel `f`/`fcc` pair is
-/// unchanged (the lesser-path convolution cache assumes it).
-#[allow(clippy::too_many_arguments)]
-pub fn vie2_timestep_ws(
-    tstp: i64,
-    g: &mut ContourGreen,
-    f: &ContourGreen,
-    fcc: &ContourGreen,
-    q: &ContourGreen,
-    integ: &Integrator,
-    beta: f64,
-    h: f64,
-    ws: &mut Vie2Workspace,
-) {
-    // the retarded component is solved from the right action equation,
-    // so F and Fcc are exchanged
-    vie2_timestep_ret_ws(tstp, g, fcc, f, q, h, integ, ws);
-    vie2_timestep_lmix_ws(tstp, g, f, fcc, q, beta, h, integ, ws);
-    vie2_timestep_less_ws(tstp, g, f, fcc, q, beta, h, integ, ws);
-}
 
 /// Time stepping of the retarded component: the right action equation
 /// `G^R + G^R * K^R = Q^R` with the kernel `K = Fcc` and its partner
