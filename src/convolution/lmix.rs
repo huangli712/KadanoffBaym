@@ -104,7 +104,7 @@ use crate::weights::Integrator;
 use crate::types::MATSUBARA;
 
 use crate::convolution::a_times_f;
-use crate::convolution::full::{check_conv_shapes, check_partner};
+use crate::convolution::check::{check_conv_shapes, check_partner};
 use crate::linalg::{mul_acc, mul_acc_c, mul_acc_c2_u, mul_acc_c4_u, mul_acc_cd};
 use crate::types::adjoint_block_into;
 
@@ -914,73 +914,19 @@ pub fn incr_convolution_lmix(
     h: f64,
     alpha: Complex,
 ) {
-    assert!(tstp >= 0);
-    assert!(beta > 0.0);
-    assert!(h > 0.0);
-    check_conv_shapes(
-        (c.size1, c.size2),
-        (a.size1, a.size2),
-        f.map(|cf| (cf.size1, cf.size2)),
-        (b.size1, b.size2),
-    );
-    check_partner("Acc", (acc.size1, acc.size2), (a.size1, a.size2));
-    let dtau = beta / a.ntau as f64;
-    let mut ws = ConvWorkspace::new(a.size1, a.size2, b.size1, b.size2);
-    let fop = match f {
-        Some(cf) => FOp::Cf(cf),
-        None => FOp::None,
-    };
-    // C_1: real-time part
-    conv_ret_lmix_kernel(
+    incr_convolution_lmix_impl(
         &mut c.lmix,
         tstp,
         tstp,
-        &a.ret,
-        &acc.ret,
-        fop,
-        &b.lmix,
+        a,
+        acc,
+        f,
+        b,
         integ,
-        alpha * Complex::new(h, 0.0),
-        &mut ws,
-        (0, a.ntau as i64),
-    );
-    // C_2 + C_3: imaginary-time part with f_0 = f(0^-); the blocks
-    // f_0 B^M(tau_m) are flat and contiguous
-    let mut btbuf: Vec<Complex>;
-    let bt: &[Complex] = match f {
-        Some(cf) => {
-            let f0 = cf.block(MATSUBARA);
-            let kdim = f0.len() / a.size2;
-            // one slot per tau: an (a.size2 x b.size2) block of f_0 * B^M
-            let nelb = a.size2 * b.size2;
-            btbuf = vec![Complex::ZERO; (a.ntau + 1) * nelb];
-            for m in 0..=(a.ntau as i64) {
-                mul_acc(
-                    &mut btbuf[m as usize * nelb..(m as usize + 1) * nelb],
-                    1.0,
-                    f0,
-                    b.mat.block(m as usize),
-                    a.size2,
-                    kdim,
-                    b.size2,
-                );
-            }
-            &btbuf
-        }
-        None => b.mat.raw(),
-    };
-    let rowlen = (a.ntau + 1) * a.size1 * b.size2;
-    let off = tstp as usize * rowlen;
-    let row = &mut c.lmix.raw_mut()[off..off + rowlen];
-    conv_lmix_mat_loop(
-        row,
-        tstp,
-        &a.lmix,
-        bt,
-        integ,
-        a.sign,
-        alpha * Complex::new(dtau, 0.0),
-        (0, a.ntau as i64),
+        beta,
+        h,
+        alpha,
+        None,
     );
 }
 
@@ -1003,11 +949,32 @@ pub(crate) fn incr_convolution_lmix_step(
     alpha: Complex,
     ws: Option<&mut ConvWorkspace>,
 ) {
+    incr_convolution_lmix_impl(c, 0, tstp, a, acc, f, b, integ, beta, h, alpha, ws);
+}
+
+/// Shared body of [`incr_convolution_lmix`] and [`incr_convolution_lmix_step`]:
+/// row `nrow` of `comp` receives the increment (the single-row target
+/// always uses row 0). `ws = None` builds a fresh workspace.
+#[allow(clippy::too_many_arguments)]
+fn incr_convolution_lmix_impl(
+    comp: &mut LmixComp,
+    nrow: i64,
+    tstp: i64,
+    a: &ContourGreen,
+    acc: &ContourGreen,
+    f: Option<&TimeFunction>,
+    b: &ContourGreen,
+    integ: &Integrator,
+    beta: f64,
+    h: f64,
+    alpha: Complex,
+    ws: Option<&mut ConvWorkspace>,
+) {
     assert!(tstp >= 0);
     assert!(beta > 0.0);
     assert!(h > 0.0);
     check_conv_shapes(
-        (c.size1, c.size2),
+        (comp.size1, comp.size2),
         (a.size1, a.size2),
         f.map(|cf| (cf.size1, cf.size2)),
         (b.size1, b.size2),
@@ -1026,10 +993,10 @@ pub(crate) fn incr_convolution_lmix_step(
         Some(cf) => FOp::Cf(cf),
         None => FOp::None,
     };
-    // the timestep lmix is a single-row component: row index 0
+    // C_1: real-time part
     conv_ret_lmix_kernel(
-        c,
-        0,
+        comp,
+        nrow,
         tstp,
         &a.ret,
         &acc.ret,
@@ -1065,7 +1032,9 @@ pub(crate) fn incr_convolution_lmix_step(
         }
         None => b.mat.raw(),
     };
-    let row = c.raw_mut();
+    let rowlen = (a.ntau + 1) * a.size1 * b.size2;
+    let off = nrow as usize * rowlen;
+    let row = &mut comp.raw_mut()[off..off + rowlen];
     conv_lmix_mat_loop(
         row,
         tstp,
