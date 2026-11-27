@@ -296,12 +296,9 @@ fn dyson_free_model() {
             MatsubaraMethod::Fixpoint,
             true,
         );
-        // The reference asserts < 1e-11 (its own run sits at 1.1e-12);
-        // the Rust round-off floor of the 50-step BDF march lands at
-        // 1.4e-11 through a different LAPACK-vs-hand-LU pivoting path
-        // (known deviation, documented).
+        // The reference asserts < 1e-11 (its own run sits at 1.1e-12).
         let e = max_abs(&g, &g_exact);
-        assert!(e < 5e-11, "{sign:?}: {e}");
+        assert!(e < 1e-11, "{sign:?}: {e}");
     }
 }
 

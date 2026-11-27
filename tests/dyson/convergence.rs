@@ -150,12 +150,7 @@ fn gate(ns: &[i64], ks: i64) {
     }
     for errs in &errs3 {
         assert!(errs.iter().all(|e| e.is_finite()));
-        // k = 5 at the release grids: the finest point (N = 400) hits
-        // the Rust round-off floor of the BDF march (~4.7e-11, while
-        // the reference continues to 2e-12; the first three grids
-        // agree within 10 percent). Exclude the floored point from
-        // the order fit (known deviation, documented).
-        let plateau = if ks == 5 { 9.12e-11 } else { 1e-13 };
+        let plateau = 1e-13;
         let gate = check_order_gate(
             ns,
             errs,
