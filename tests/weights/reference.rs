@@ -74,6 +74,11 @@ fn metadata() {
 fn point_wise_comparison() {
     let ref_data = read_ref(&data_path("weights_k1_k5.dat")).expect("read ref");
     let (atol, rtol) = (2e-12, 2e-12);
+    // The bd, greg and rcorr tables derive from exact rational weights and
+    // must be bit-identical to the reference, which stores the correctly
+    // rounded exact values. The pdiff and pint reference values carry the
+    // round-off of the reference's own evaluation.
+    let exact = ["bd", "greg", "rcorr"];
     let mut errs: BTreeMap<String, f64> = BTreeMap::new();
     let mut nfail = 0usize;
     for row in &ref_data.rows {
@@ -81,7 +86,12 @@ fn point_wise_comparison() {
         let w = row.value.re;
         let e = errs.entry(row.component.clone()).or_insert(0.0);
         *e = e.max((v - w).abs());
-        if !is_close(v, w, atol, rtol) {
+        let close = if exact.contains(&row.component.as_str()) {
+            v == w
+        } else {
+            is_close(v, w, atol, rtol)
+        };
+        if !close {
             nfail += 1;
             if nfail <= 10 {
                 eprintln!(
