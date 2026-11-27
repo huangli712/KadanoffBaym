@@ -105,8 +105,8 @@ use crate::weights::Integrator;
 
 use crate::types::MATSUBARA;
 
+use crate::convolution::check::{check_conv_args, check_conv_shapes};
 use crate::convolution::f_times_b;
-use crate::convolution::full::{check_conv_args, check_conv_shapes};
 use crate::linalg::{mul_acc, mul_acc_c, mul_acc_c2_u, mul_acc_c4, mul_acc_c4_u, mul_acc_cd};
 use crate::types::{adjoint_block_into, triangular_row_offset};
 
