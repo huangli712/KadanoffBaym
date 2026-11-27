@@ -1,7 +1,7 @@
 // Project : KadanoffBaym
 // File    : src/vie2/full.rs
-// Purpose : Volterra integral equation of the second kind: argument
-//           checks and the full driver
+// Purpose : Volterra integral equation of the second kind: the drivers
+//           (the full contour and the single time step)
 //
 // The VIE2 reads `[1 + F] * G = Q` with the hermitian conjugate
 // partner `Fcc` of the kernel. The (unrepresentable) alias checks are
@@ -83,12 +83,16 @@
 //!
 
 use crate::base::MatsubaraMethod;
-use crate::types::{ContourGreen, Sign};
+use crate::types::ContourGreen;
 use crate::weights::Integrator;
+
+use crate::types::MATSUBARA;
 
 use crate::vie2::workspace::Vie2Workspace;
 
-use crate::vie2::timestep::vie2_timestep_ws;
+use crate::vie2::check::{check_vie2, check_vie2_order};
+use crate::vie2::start::vie2_bootstrap;
+use crate::vie2::timestep::{vie2_timestep_less_ws, vie2_timestep_lmix_ws, vie2_timestep_ret_ws};
 use crate::vie2::{vie2_mat, vie2_start};
 
 /// Solve the VIE2 `[1 + F] * G = Q` for all the components of `g`:
@@ -113,37 +117,69 @@ pub fn vie2(
     }
 }
 
-/// Check the compatibility of the arguments of the VIE2 solvers.
-pub(super) fn check_vie2(g: &ContourGreen, f: &ContourGreen, fcc: &ContourGreen, q: &ContourGreen) {
+/// Solve the VIE2 at the time step `tstp`:
+///
+/// * `MATSUBARA` -> the Matsubara component (`vie2_mat`)
+/// * `0` -> the zeroth order start-up at `t = 0`
+/// * `1 <= tstp <= k` -> the start-up of order `tstp`, i.e. the time
+///   steps `0, .., tstp` are (re)calculated
+/// * `tstp >= k + 1` -> the time stepping; the previous time steps must
+///   be known
+#[allow(clippy::too_many_arguments)]
+pub fn vie2_timestep(
+    tstp: i64,
+    g: &mut ContourGreen,
+    f: &ContourGreen,
+    fcc: &ContourGreen,
+    q: &ContourGreen,
+    integ: &Integrator,
+    beta: f64,
+    h: f64,
+    method: MatsubaraMethod,
+) {
+    check_vie2(g, f, fcc, q);
+    check_vie2_order(integ);
     assert!(
-        g.sign == Sign::Fermi || g.sign == Sign::Bose,
-        "unknown statistics of G"
+        MATSUBARA <= tstp && tstp <= g.nt as i64,
+        "time step {tstp} out of range"
     );
-    for (x, name) in [(f, "F"), (fcc, "Fcc"), (q, "Q")] {
-        assert!(
-            x.sign == g.sign,
-            "G and {name} must have the same statistics"
-        );
-        assert!(
-            x.size1 == g.size1 && x.size2 == g.size2,
-            "G and {name} have different sizes"
-        );
-        assert!(
-            x.ntau == g.ntau,
-            "G and {name} have different imaginary time grids"
-        );
-        assert!(x.nt == g.nt, "G and {name} have different real time grids");
+    assert!(beta > 0.0, "beta must be positive");
+    assert!(h > 0.0, "h must be positive");
+    let k = integ.k;
+
+    if tstp == MATSUBARA {
+        vie2_mat(g, f, fcc, q, beta, integ, method, 6, 40, 1e-12);
+    } else if tstp == 0 {
+        vie2_bootstrap(g, f, q, beta);
+    } else if tstp <= k {
+        vie2_start(g, f, fcc, q, tstp, beta, h);
+    } else {
+        let mut ws = Vie2Workspace::new(integ.k, g.size1, g.ntau);
+        vie2_timestep_ws(tstp, g, f, fcc, q, integ, beta, h, &mut ws);
     }
-    assert!(g.size1 == g.size2, "G must be square");
 }
 
-/// Check the order of the integrator.
-pub(super) fn check_vie2_order(integ: &Integrator) {
-    assert!(
-        (1..=5).contains(&integ.k),
-        "the order of the integrator must be in 1..=5, got {}",
-        integ.k
-    );
+/// Workspace-reusing VIE2 time stepping (the `tstp > k` branch of
+/// [`vie2_timestep`]): pass one [`Vie2Workspace`] built before the
+/// time-step loop. Reuse is valid while the kernel `f`/`fcc` pair is
+/// unchanged (the lesser-path convolution cache assumes it).
+#[allow(clippy::too_many_arguments)]
+pub fn vie2_timestep_ws(
+    tstp: i64,
+    g: &mut ContourGreen,
+    f: &ContourGreen,
+    fcc: &ContourGreen,
+    q: &ContourGreen,
+    integ: &Integrator,
+    beta: f64,
+    h: f64,
+    ws: &mut Vie2Workspace,
+) {
+    // the retarded component is solved from the right action equation,
+    // so F and Fcc are exchanged
+    vie2_timestep_ret_ws(tstp, g, fcc, f, q, h, integ, ws);
+    vie2_timestep_lmix_ws(tstp, g, f, fcc, q, beta, h, integ, ws);
+    vie2_timestep_less_ws(tstp, g, f, fcc, q, beta, h, integ, ws);
 }
 
 #[cfg(test)]
@@ -152,7 +188,7 @@ mod tests {
 
     use crate::complex::Complex;
     use crate::linalg::DenseMat;
-    use crate::types::{Contour, GreenTimeStep, TimeFunction};
+    use crate::types::{Contour, GreenTimeStep, Sign, TimeFunction};
     use crate::weights::Integrator;
 
     use crate::convolution::convolution_ab;
