@@ -56,6 +56,7 @@ use crate::storage::timestep_at;
 
 use crate::vie2::workspace::PseudoVie2Workspace;
 
+use crate::vie2::check::check_pseudo_vie2;
 use crate::vie2::start::{vie2_start_less, vie2_start_ret};
 
 /// Solve the pseudo-particle VIE2 at the Matsubara axis and at all the
@@ -563,53 +564,6 @@ fn pseudo_vie2_timestep_impl(
             solve_block_left_single(&mut gj, &mmt, &qblk, ws1);
             g.less.raw_block_at_mut(j, tstp).copy_from_slice(gj.raw());
         }
-    }
-}
-
-/// Check the arguments of the pseudo-particle VIE2 solvers. `nmax < 0`
-/// means that only the Matsubara axis is needed.
-fn check_pseudo_vie2(
-    g: &PseudoGreen,
-    f: &PseudoGreen,
-    fcc: &PseudoGreen,
-    q: &PseudoGreen,
-    integ: &Integrator,
-    nmax: i64,
-) {
-    assert!(
-        (1..=5).contains(&integ.k),
-        "the order must be in 1..=5, got {}",
-        integ.k
-    );
-    for x in [f, fcc, q] {
-        assert!(
-            x.sign == g.sign,
-            "all the Green's functions must have the same statistics"
-        );
-        assert!(
-            x.size1 == g.size1 && x.size2 == g.size2,
-            "all the Green's functions must have the same size"
-        );
-        assert!(
-            x.ntau == g.ntau,
-            "all the Green's functions must have the same imaginary time grid"
-        );
-        assert!(
-            x.nt == g.nt,
-            "all the Green's functions must have the same real time grid"
-        );
-    }
-    assert!(g.size1 == g.size2, "G must be square");
-    assert!(
-        g.ntau as i64 > integ.k,
-        "ntau must be larger than solve_order + 1"
-    );
-    if nmax >= 0 {
-        assert!(
-            g.nt as i64 >= nmax,
-            "G must have at least {} real time steps",
-            nmax + 1
-        );
     }
 }
 
