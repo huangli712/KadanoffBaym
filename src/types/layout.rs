@@ -54,6 +54,18 @@ pub(crate) fn adjoint_block_into(src: &[Complex], out: &mut [Complex], s1: usize
     }
 }
 
+/// Negative adjoint of a square block `src` (`d x d`) into `out`:
+/// `out[a][b] = -src[b][a]^*`. This is the hermitian reconstruction of
+/// the non-stored triangle, `G(t_n, t_m) = -G(t_m, t_n)^dagger`.
+#[inline]
+pub(crate) fn neg_adjoint_block_into(src: &[Complex], out: &mut [Complex], d: usize) {
+    for a in 0..d {
+        for b in 0..d {
+            out[a * d + b] = -src[b * d + a].conj();
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
