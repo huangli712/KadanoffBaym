@@ -10,6 +10,7 @@ use crate::weights::Integrator;
 
 use crate::types::MATSUBARA;
 
+use crate::convolution::check::check_conv_args;
 use crate::convolution::mat::{conv_mat, conv_mat_f0, f0_matrix};
 use crate::convolution::{conv_less_adv_kernel, conv_lmix_rmix_kernel, conv_ret_less_kernel};
 use crate::convolution::{conv_lmix_mat_loop, conv_ret_lmix_kernel, conv_ret_row};
@@ -179,7 +180,7 @@ pub fn convolution(
     let mut ws = ConvWorkspace::new(a.size1, a.size2, b.size1, b.size2);
     // The loop runs over every real time step, 0..=nt
     for n in 0..=(c.nt as i64) {
-        convolution_time_step(n, c, a, acc, f, b, bcc, integ, beta, h, Some(&mut ws));
+        convolution_timestep(n, c, a, acc, f, b, bcc, integ, beta, h, Some(&mut ws));
     }
 }
 
@@ -215,7 +216,7 @@ pub fn convolution_ab(
 /// Matsubara blocks of `b` are unchanged; call `ws.reset()` when the
 /// inputs change.
 #[allow(clippy::too_many_arguments)]
-pub fn convolution_time_step(
+pub fn convolution_timestep(
     n: i64,
     c: &mut ContourGreen,
     a: &ContourGreen,
@@ -350,73 +351,6 @@ pub fn convolution_time_step(
     );
 }
 
-/// Shape contract of `C = A * f * B` (of `C = A * B` without `f`): the
-/// columns of `A` match the rows of `f` (of `B` without `f`), the columns
-/// of `f` match the rows of `B`, and `C` has the rows of `A` and the
-/// columns of `B`.
-pub(crate) fn check_conv_shapes(
-    c: (usize, usize),
-    a: (usize, usize),
-    f: Option<(usize, usize)>,
-    b: (usize, usize),
-) {
-    let (s1c, s2c) = c;
-    let (s1a, s2a) = a;
-    let (s1b, s2b) = b;
-    let inner = match f {
-        Some((s1f, s2f)) => s2a == s1f && s2f == s1b,
-        None => s2a == s1b,
-    };
-    assert!(
-        inner && s1c == s1a && s2c == s2b,
-        "convolution: inconsistent shapes: A {}x{}, f {:?}, B {}x{}, C {}x{}",
-        s1a,
-        s2a,
-        f,
-        s1b,
-        s2b,
-        s1c,
-        s2c
-    );
-}
-
-/// [`check_conv_shapes`] and the partner checks, for the usual argument
-/// list of the convolution entry points.
-pub(crate) fn check_conv_args(
-    c: (usize, usize),
-    a: &ContourGreen,
-    acc: &ContourGreen,
-    f: Option<&TimeFunction>,
-    b: &ContourGreen,
-    bcc: &ContourGreen,
-) {
-    check_conv_shapes(
-        c,
-        (a.size1, a.size2),
-        f.map(|cf| (cf.size1, cf.size2)),
-        (b.size1, b.size2),
-    );
-    check_partner("Acc", (acc.size1, acc.size2), (a.size1, a.size2));
-    check_partner("Bcc", (bcc.size1, bcc.size2), (b.size1, b.size2));
-}
-
-/// The partner objects hold the transposed blocks: `acc` has `a.size2`
-/// rows and `a.size1` columns, `bcc` has `b.size2` rows and `b.size1`
-/// columns.
-pub(crate) fn check_partner(name: &str, p: (usize, usize), of: (usize, usize)) {
-    assert!(
-        p.0 == of.1 && p.1 == of.0,
-        "convolution: {} {}x{} does not match its partner {}x{} ({}x{} blocks needed)",
-        name,
-        p.0,
-        p.1,
-        of.0,
-        of.1,
-        of.1,
-        of.0
-    );
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -444,7 +378,7 @@ mod tests {
         let mut cgreen = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         let integ = Integrator::new(3);
         for n in 1..=nt {
-            convolution_time_step(n, &mut cgreen, &g, &g, None, &g, &g, &integ, beta, h, None);
+            convolution_timestep(n, &mut cgreen, &g, &g, None, &g, &g, &integ, beta, h, None);
         }
         for n in 1..=nt {
             for m in 0..=n {
@@ -493,7 +427,7 @@ mod tests {
         let mut cgreen = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         let integ = Integrator::new(3);
         for n in 1..=nt {
-            convolution_time_step(n, &mut cgreen, &g, &g, None, &g, &g, &integ, beta, h, None);
+            convolution_timestep(n, &mut cgreen, &g, &g, None, &g, &g, &integ, beta, h, None);
         }
         let dtau = beta / ntau as f64;
         for n in 1..=nt {
@@ -518,8 +452,8 @@ mod tests {
         let mut c2 = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         let mut ws = ConvWorkspace::new(g.size1, g.size2, g.size1, g.size2);
         for n in 1..=nt {
-            convolution_time_step(n, &mut c1, &g, &g, None, &g, &g, &integ, beta, h, None);
-            convolution_time_step(
+            convolution_timestep(n, &mut c1, &g, &g, None, &g, &g, &integ, beta, h, None);
+            convolution_timestep(
                 n,
                 &mut c2,
                 &g,
@@ -550,11 +484,11 @@ mod tests {
         let mut ws = ConvWorkspace::new(g.size1, g.size2, g.size1, g.size2);
         for n in 1..=nt {
             // pair 1: (g, g2)
-            convolution_time_step(n, &mut c1, &g, &g, None, &g2, &g2, &integ, beta, h, None);
+            convolution_timestep(n, &mut c1, &g, &g, None, &g2, &g2, &integ, beta, h, None);
             // pair 2 on the SAME ws after reset: (g2, g)
             let mut tmp = ContourGreen::new(&c2, Sign::Bose, Complex::ZERO);
             ws.reset();
-            convolution_time_step(
+            convolution_timestep(
                 n,
                 &mut tmp,
                 &g2,
@@ -568,7 +502,7 @@ mod tests {
                 Some(&mut ws),
             );
             let mut ref2 = ContourGreen::new(&c2, Sign::Bose, Complex::ZERO);
-            convolution_time_step(n, &mut ref2, &g2, &g2, None, &g, &g, &integ, beta, h, None);
+            convolution_timestep(n, &mut ref2, &g2, &g2, None, &g, &g, &integ, beta, h, None);
             assert!(tmp.equal(&ref2), "pair 2 differs at n = {n}");
         }
     }
