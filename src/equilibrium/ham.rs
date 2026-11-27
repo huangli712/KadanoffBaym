@@ -282,7 +282,9 @@ pub fn from_ham(g: &mut ContourGreen, mu: f64, h0: &DenseMat, beta: f64, h: f64)
 }
 
 // ------------------------------------------------------------------
-// Time-dependent Hamiltonian: commutator-free propagators
+// Matsubara solution from a Hamiltonian
+// ------------------------------------------------------------------
+
 /// Free Matsubara Green's function of the hermitian matrix `H[MATSUBARA]`:
 /// `-R diag(e^{tau lambda} n_F(lambda)) R^dag` for fermions and
 /// `+R diag(e^{tau lambda} n_B(lambda)) R^dag` for bosons, where
@@ -301,6 +303,9 @@ pub fn from_ham_mat(g0: &mut MatComp, mu: f64, h: &TimeFunction, beta: f64, sign
     let (lambda, r) = eigh(&k);
     fill_matsubara(g0, &lambda, &r, beta, sign == Sign::Fermi);
 }
+
+// ------------------------------------------------------------------
+// Time-dependent Hamiltonian: commutator-free propagators
 // ------------------------------------------------------------------
 
 /// Prepare the Hamiltonian for the propagation from `tstp - 1` to
