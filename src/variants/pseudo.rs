@@ -77,11 +77,10 @@ impl PseudoGreen {
     }
 
     /// Left multiplication by a contour function at time step `tstp`
-    /// (row-scoped, like the NESSi `herm_pseudo::left_multiply`): at
-    /// `MATSUBARA` only the Matsubara component is scaled by `f_0`; at a
-    /// real-time step only that step is touched, the lesser blocks are
-    /// weighted by `f(j)`, the rest by `f(tstp)`, and the Matsubara
-    /// component is left unchanged.
+    /// (row-scoped): at `MATSUBARA` only the Matsubara component is
+    /// scaled by `f_0`; at a real-time step only that step is touched,
+    /// the lesser blocks are weighted by `f(j)`, the rest by `f(tstp)`,
+    /// and the Matsubara component is left unchanged.
     pub fn lmul_cf(&mut self, tstp: i64, f: &TimeFunction) {
         lmul_cf_at(
             (&mut self.mat, &mut self.ret, &mut self.lmix, &mut self.less),
@@ -94,11 +93,10 @@ impl PseudoGreen {
     }
 
     /// Right multiplication by a contour function at time step `tstp`
-    /// (row-scoped, like the NESSi `herm_pseudo::right_multiply`): at
-    /// `MATSUBARA` only the Matsubara component is scaled by `f_0`; at a
-    /// real-time step only that step is touched, the ret blocks are
-    /// weighted by `f(j)`, the rest by `f(tstp)`, and the Matsubara
-    /// component is left unchanged.
+    /// (row-scoped): at `MATSUBARA` only the Matsubara component is
+    /// scaled by `f_0`; at a real-time step only that step is touched,
+    /// the ret blocks are weighted by `f(j)`, the rest by `f(tstp)`,
+    /// and the Matsubara component is left unchanged.
     pub fn rmul_cf(&mut self, tstp: i64, f: &TimeFunction) {
         rmul_cf_at(
             (&mut self.mat, &mut self.ret, &mut self.lmix, &mut self.less),
