@@ -3,6 +3,8 @@
 // Purpose : equilibrium propagators from a Hamiltonian, and the
 //           Hamiltonian checks shared with the Dyson solvers
 
+use std::iter::once;
+
 use crate::complex::Complex;
 use crate::linalg::DenseMat;
 use crate::types::{ContourGreen, MatComp, Sign, TimeFunction};
@@ -36,7 +38,7 @@ fn scale_ih(m: &DenseMat, hstep: f64) -> DenseMat {
 
 /// `m - mu * I`: for a Hamiltonian, the negative of the `K = mu - H` of
 /// the propagators.
-pub(crate) fn minus_mu(m: &DenseMat, mu: f64) -> DenseMat {
+fn minus_mu(m: &DenseMat, mu: f64) -> DenseMat {
     let d = m.nrows();
     let mut r = m.clone();
     for i in 0..d {
@@ -115,13 +117,7 @@ fn check_static_hamiltonian(g: &ContourGreen, h0: &DenseMat) {
 /// `K = mu*I - H = R diag(lambda) R^dagger`: `-R diag[e^{tau lambda}
 /// n_F(lambda)] R^dagger` for fermions and `+R diag[e^{tau lambda}
 /// n_B(lambda)] R^dagger` for bosons.
-pub(crate) fn fill_matsubara(
-    mat: &mut MatComp,
-    lambda: &[f64],
-    r: &DenseMat,
-    beta: f64,
-    fermion: bool,
-) {
+fn fill_matsubara(mat: &mut MatComp, lambda: &[f64], r: &DenseMat, beta: f64, fermion: bool) {
     let dtau = beta / mat.ntau as f64;
     for m in 0..=(mat.ntau as i64) {
         let tau = m as f64 * dtau;
@@ -287,6 +283,24 @@ pub fn from_ham(g: &mut ContourGreen, mu: f64, h0: &DenseMat, beta: f64, h: f64)
 
 // ------------------------------------------------------------------
 // Time-dependent Hamiltonian: commutator-free propagators
+/// Free Matsubara Green's function of the hermitian matrix `H[MATSUBARA]`:
+/// `-R diag(e^{tau lambda} n_F(lambda)) R^dag` for fermions and
+/// `+R diag(e^{tau lambda} n_B(lambda)) R^dag` for bosons, where
+/// `mu*I - H = R diag(lambda) R^dag`.
+///
+/// The result is written into `g0`; only the Matsubara block of `h` is
+/// read.
+pub fn from_ham_mat(g0: &mut MatComp, mu: f64, h: &TimeFunction, beta: f64, sign: Sign) {
+    let d = g0.size1;
+    check_hamiltonian(h, once(MATSUBARA), d);
+
+    // K = mu*I - H and its eigendecomposition
+    let h0 = DenseMat::from_slice(d, d, h.block(MATSUBARA));
+    let mut k = minus_mu(&h0, mu);
+    k.scale(-1.0);
+    let (lambda, r) = eigh(&k);
+    fill_matsubara(g0, &lambda, &r, beta, sign == Sign::Fermi);
+}
 // ------------------------------------------------------------------
 
 /// Prepare the Hamiltonian for the propagation from `tstp - 1` to
