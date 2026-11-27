@@ -116,6 +116,7 @@ pub struct MovingDysonWorkspace {
     pub(super) ws1: BlockSolver,
     pub(super) mm: DenseMat,
     pub(super) mm2: DenseMat,
+    pub(super) prod: DenseMat,
     pub(super) g00: Vec<Complex>,
     pub(super) diffw: Vec<Complex>,
 }
@@ -129,6 +130,7 @@ impl MovingDysonWorkspace {
             ws1: BlockSolver::new(1, d),
             mm: DenseMat::zeros(d),
             mm2: DenseMat::zeros(d),
+            prod: DenseMat::zeros(d),
             g00: Vec::new(),
             diffw: Vec::new(),
         }
