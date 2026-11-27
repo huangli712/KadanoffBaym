@@ -17,7 +17,7 @@ use crate::convolution::{incr_convolution_less_adv_step, incr_convolution_lmix_r
 use crate::linalg::{axpy_c, scale_c, solve_block_right};
 use crate::types::adjoint_block_into;
 
-use crate::dyson::full::check_dyson_rt;
+use crate::dyson::check::check_dyson_rt;
 use crate::dyson::timestep::dyson_less_core;
 
 /// Solve the Dyson equation for the first `solve_order + 1` real time
